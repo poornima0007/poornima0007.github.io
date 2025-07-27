@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MovieStream - Movie Detail</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">MovieStream</a>
+      <ul class="navbar-nav">
+        <li><a href="movies.html">Movies</a></li>
+        <li><a href="series.html">Series</a></li>
+        <li><a href="profile.html">Profile</a></li>
+        <li><a href="donate.html">Donate</a></li>
+      </ul>
+      <form class="search-form" action="search.html" method="get" aria-label="Search site">
+        <input type="text" name="q" placeholder="Search by title or cast..." aria-label="Search input">
+        <button type="submit" aria-label="Search"><span style="vertical-align:middle;">🔍</span> Search</button>
+      </form>
+    </div>
+  </nav>
+  <main id="main-content">
+    <section class="movie-hero">
+      <div class="movie-hero-bg" id="movie-hero-bg"></div>
+      <div class="movie-hero-content">
+        <div class="movie-poster-card" id="movie-poster-card"></div>
+        <div class="movie-info-card" id="movie-info-card"></div>
+      </div>
+    </section>
+    <section class="movie-player-section" id="movie-player-section"></section>
+    <section class="movie-cast-section" id="movie-cast-section"></section>
+  </main>
+  <footer>
+    MovieStream &copy; 2025. Not affiliated with Netflix or TMDb.
+  </footer>
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html> 

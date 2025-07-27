@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MovieStream - Profile</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">MovieStream</a>
+      <ul class="navbar-nav">
+        <li><a href="movies.html">Movies</a></li>
+        <li><a href="series.html">Series</a></li>
+        <li><a href="profile.html">Profile</a></li>
+        <li><a href="donate.html">Donate</a></li>
+      </ul>
+      <form class="search-form" action="search.html" method="get" aria-label="Search site">
+        <input type="text" name="q" placeholder="Search by title or cast..." aria-label="Search input">
+        <button type="submit" aria-label="Search"><span style="vertical-align:middle;">🔍</span> Search</button>
+      </form>
+    </div>
+  </nav>
+  <main id="main-content">
+    <h2 class="mb-4">Profile</h2>
+    <div class="row" style="display:flex;gap:2rem;flex-wrap:wrap;">
+      <div class="col-md-6">
+        <h4>Favorite Movies</h4>
+        <div class="animated-grid">
+          <a href="movie_detail.html?id=1" class="animated-card" style="animation-delay: 0s;">
+            <img src="https://image.tmdb.org/t/p/w342/sample1.jpg" alt="Movie 1">
+            <div class="movie-title">Movie 1</div>
+          </a>
+        </div>
+        <h4 class="mt-4">Favorite Series</h4>
+        <div class="animated-grid">
+          <a href="series_detail.html?id=1" class="animated-card" style="animation-delay: 0s;">
+            <img src="https://image.tmdb.org/t/p/w342/sample10.jpg" alt="Series 1">
+            <div class="movie-title">Series 1</div>
+          </a>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <h4>Watchlist Movies</h4>
+        <div class="animated-grid">
+          <a href="movie_detail.html?id=2" class="animated-card" style="animation-delay: 0s;">
+            <img src="https://image.tmdb.org/t/p/w342/sample2.jpg" alt="Movie 2">
+            <div class="movie-title">Movie 2</div>
+          </a>
+        </div>
+        <h4 class="mt-4">Watchlist Series</h4>
+        <div class="animated-grid">
+          <a href="series_detail.html?id=2" class="animated-card" style="animation-delay: 0s;">
+            <img src="https://image.tmdb.org/t/p/w342/sample11.jpg" alt="Series 2">
+            <div class="movie-title">Series 2</div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer>
+    MovieStream &copy; 2025. Not affiliated with Netflix or TMDb.
+  </footer>
+  <script src="script.js"></script>
+</body>
+</html> 

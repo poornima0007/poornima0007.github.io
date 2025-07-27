@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MovieStream - Home</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">MovieStream</a>
+      <ul class="navbar-nav">
+        <li><a href="movies.html">Movies</a></li>
+        <li><a href="series.html">Series</a></li>
+        <li><a href="profile.html">Profile</a></li>
+        <li><a href="donate.html">Donate</a></li>
+      </ul>
+      <form class="search-form" action="search.html" method="get" aria-label="Search site">
+        <input type="text" name="q" placeholder="Search by title or cast..." aria-label="Search input">
+        <button type="submit" aria-label="Search"><span style="vertical-align:middle;">🔍</span> Search</button>
+      </form>
+    </div>
+  </nav>
+  <main id="main-content">
+    <section class="hero-section">
+      <h1 class="hero-title">Welcome to MovieStream</h1>
+      <p class="hero-subtitle">Your gateway to the world of movies and series. Discover, search, and stream the best content powered by TMDb.</p>
+    </section>
+    <section class="highlight-section">
+      <h2 class="section-title">Top 10 Movies</h2>
+      <div class="carousel-row">
+        <button class="carousel-arrow left" onclick="scrollRow('top10-movies-row', -1)" aria-label="Scroll left">&#8592;</button>
+        <div class="carousel-scroll" id="top10-movies-row"></div>
+        <button class="carousel-arrow right" onclick="scrollRow('top10-movies-row', 1)" aria-label="Scroll right">&#8594;</button>
+      </div>
+    </section>
+    <section class="highlight-section">
+      <h2 class="section-title">Top 10 Series</h2>
+      <div class="carousel-row">
+        <button class="carousel-arrow left" onclick="scrollRow('top10-series-row', -1)" aria-label="Scroll left">&#8592;</button>
+        <div class="carousel-scroll" id="top10-series-row"></div>
+        <button class="carousel-arrow right" onclick="scrollRow('top10-series-row', 1)" aria-label="Scroll right">&#8594;</button>
+      </div>
+    </section>
+    <section class="highlight-section">
+      <h2 class="section-title">Trending</h2>
+      <div class="carousel-row">
+        <button class="carousel-arrow left" onclick="scrollRow('trending-row', -1)" aria-label="Scroll left">&#8592;</button>
+        <div class="carousel-scroll" id="trending-row"></div>
+        <button class="carousel-arrow right" onclick="scrollRow('trending-row', 1)" aria-label="Scroll right">&#8594;</button>
+      </div>
+    </section>
+    <section class="highlight-section">
+      <h2 class="section-title">Popular Movies</h2>
+      <div class="carousel-row">
+        <button class="carousel-arrow left" onclick="scrollRow('popular-row', -1)" aria-label="Scroll left">&#8592;</button>
+        <div class="carousel-scroll" id="popular-row"></div>
+        <button class="carousel-arrow right" onclick="scrollRow('popular-row', 1)" aria-label="Scroll right">&#8594;</button>
+      </div>
+    </section>
+    <section class="highlight-section">
+      <h2 class="section-title">Recommended</h2>
+      <div class="carousel-row">
+        <button class="carousel-arrow left" onclick="scrollRow('recommended-row', -1)" aria-label="Scroll left">&#8592;</button>
+        <div class="carousel-scroll" id="recommended-row"></div>
+        <button class="carousel-arrow right" onclick="scrollRow('recommended-row', 1)" aria-label="Scroll right">&#8594;</button>
+      </div>
+    </section>
+  </main>
+  <footer>
+    MovieStream &copy; 2025. Not affiliated with Netflix or TMDb.
+  </footer>
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html> 

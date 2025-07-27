@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MovieStream - Movies</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">MovieStream</a>
+      <ul class="navbar-nav">
+        <li><a href="movies.html">Movies</a></li>
+        <li><a href="series.html">Series</a></li>
+        <li><a href="profile.html">Profile</a></li>
+        <li><a href="donate.html">Donate</a></li>
+      </ul>
+      <form class="search-form" action="search.html" method="get" aria-label="Search movies">
+        <input type="text" name="q" placeholder="Search by title or cast..." aria-label="Search input">
+        <button type="submit" aria-label="Search"><span style="vertical-align:middle;">🔍</span> Search</button>
+      </form>
+    </div>
+  </nav>
+  <main id="main-content">
+    <h2 class="mb-4">Movies</h2>
+    <form id="movie-filter-form" class="row g-2 mb-4 align-items-end" style="display:flex;gap:1rem;flex-wrap:wrap;" aria-label="Filter movies">
+      <div class="col-md-3 form-control" style="position:relative;">
+        <input type="text" name="query" id="movie-query" class="form-control" placeholder="Search..." aria-label="Filter by title">
+      </div>
+      <div class="col-md-3">
+        <select name="genre" id="genre-select" class="form-select" aria-label="Filter by genre">
+          <option value="">All Genres</option>
+        </select>
+      </div>
+      <div class="col-md-2 form-control" style="position:relative;">
+        <input type="number" name="year" id="movie-year" class="form-control" placeholder="Year" aria-label="Filter by year">
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-danger w-100" aria-label="Apply filters"><span style="vertical-align:middle;">🎬</span> Filter</button>
+      </div>
+    </form>
+    <div class="animated-grid" id="movies-grid"></div>
+  </main>
+  <footer>
+    MovieStream &copy; 2025. Not affiliated with Netflix or TMDb.
+  </footer>
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html> 

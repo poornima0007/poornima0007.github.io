@@ -1,0 +1,1016 @@
+body {
+  background: #141414;
+  color: #fff;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+.navbar {
+  background: #181818;
+  padding: 1rem 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.navbar .container {
+  width: 90%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.navbar-brand {
+  color: #e50914;
+  font-size: 2rem;
+  font-weight: bold;
+  text-decoration: none;
+}
+.navbar-nav {
+  list-style: none;
+  display: flex;
+  gap: 2rem;
+  margin: 0;
+  padding: 0;
+}
+.navbar-nav li a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 1.1rem;
+  transition: color 0.2s;
+}
+.navbar-nav li a:hover {
+  color: #e50914;
+}
+/* --- Modern Search Bar --- */
+.search-form {
+  background: #222;
+  border-radius: 2rem;
+  box-shadow: 0 2px 12px #0005;
+  padding: 0.2rem 0.7rem 0.2rem 1.2rem;
+  align-items: center;
+  transition: box-shadow 0.25s;
+  position: relative;
+}
+.search-form input[type="text"] {
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #fff;
+  font-size: 1.08rem;
+  padding: 0.5rem 0.5rem 0.5rem 2.2rem;
+  border-radius: 2rem;
+  width: 180px;
+  transition: box-shadow 0.2s, background 0.2s;
+}
+.search-form input[type="text"]:focus {
+  background: #181818;
+  box-shadow: 0 0 0 2px #e50914;
+}
+.search-form::before {
+  content: '\1F50D'; /* Unicode magnifier */
+  position: absolute;
+  left: 1rem;
+  font-size: 1.2rem;
+  color: #e50914;
+  pointer-events: none;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.search-form button {
+  background: linear-gradient(90deg, #e50914 60%, #b0060f 100%);
+  color: #fff;
+  border: none;
+  border-radius: 2rem;
+  padding: 0.45rem 1.3rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px #e5091422;
+  transition: background 0.2s, transform 0.15s;
+  margin-left: 0.5rem;
+}
+.search-form button:hover {
+  background: linear-gradient(90deg, #b0060f 60%, #e50914 100%);
+  transform: scale(1.07);
+}
+footer {
+  text-align: center;
+  color: #aaa;
+  margin: 2rem 0 1rem 0;
+}
+/* Card grid */
+.animated-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem 1.5rem;
+  justify-content: flex-start;
+}
+.animated-card {
+  min-width: 220px;
+  max-width: 220px;
+  min-height: 330px;
+  background: #222;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px #000a;
+  transition: transform .22s cubic-bezier(.4,2,.3,1), box-shadow .22s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  opacity: 0;
+  transform: translateY(30px) scale(0.98);
+  animation: fadeInUp 0.25s forwards;
+}
+.animated-card img { width: 100%; height: 330px; object-fit: cover; }
+.animated-card .movie-title {
+  font-size: 1.1rem;
+  margin: 0;
+  text-align: center;
+  color: #fff;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 0.7rem 0.5rem 0.5rem 0.5rem;
+  background: linear-gradient(0deg, rgba(20,20,20,0.95) 70%, rgba(20,20,20,0.0) 100%);
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.animated-card:hover {
+  transform: translateY(-8px) scale(1.08);
+  box-shadow: 0 8px 32px #fff5, 0 2px 12px #000a;
+  z-index: 3;
+}
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+/* Carousel */
+.carousel-row {
+  position: relative;
+  margin-bottom: 2.5rem;
+}
+.carousel-scroll {
+  display: flex;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  gap: 1.5rem;
+  padding-bottom: 10px;
+  scroll-snap-type: x mandatory;
+}
+.carousel-scroll::-webkit-scrollbar { display: none; }
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%) scale(1);
+  z-index: 2;
+  background: rgba(20,20,20,0.7);
+  border: none;
+  color: #fff;
+  font-size: 2.5rem;
+  width: 48px;
+  height: 80px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 12px #000a;
+  outline: none;
+  animation: arrowPulse 2s infinite alternate;
+}
+.carousel-arrow:hover {
+  background: rgba(40,40,40,0.95);
+  transform: translateY(-50%) scale(1.12);
+  box-shadow: 0 4px 24px #fff3;
+}
+@keyframes arrowPulse {
+  0% { box-shadow: 0 2px 12px #000a; }
+  100% { box-shadow: 0 4px 24px #fff3; }
+}
+.carousel-arrow.left { left: 0; }
+.carousel-arrow.right { right: 0; }
+.carousel-card {
+  min-width: 220px;
+  max-width: 220px;
+  min-height: 330px;
+  background: #222;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px #000a;
+  transition: transform .22s cubic-bezier(.4,2,.3,1), box-shadow .22s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  scroll-snap-align: start;
+  opacity: 0;
+  transform: translateY(30px) scale(0.98);
+  animation: fadeInUp 0.25s forwards;
+}
+.carousel-card img { width: 100%; height: 330px; object-fit: cover; }
+.carousel-card .movie-title {
+  font-size: 1.1rem;
+  margin: 0;
+  text-align: center;
+  color: #fff;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 0.7rem 0.5rem 0.5rem 0.5rem;
+  background: linear-gradient(0deg, rgba(20,20,20,0.95) 70%, rgba(20,20,20,0.0) 100%);
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.carousel-card:hover {
+  transform: translateY(-8px) scale(1.08);
+  box-shadow: 0 8px 32px #fff5, 0 2px 12px #000a;
+  z-index: 3;
+}
+/* Tabs */
+.nav-tabs {
+  display: flex;
+  border-bottom: 2px solid #222;
+  margin-bottom: 1rem;
+}
+.nav-tabs .nav-link {
+  background: none;
+  border: none;
+  color: #fff;
+  padding: 0.7rem 1.2rem;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 8px 8px 0 0;
+  margin-right: 0.5rem;
+  transition: background 0.2s, color 0.2s;
+}
+.nav-tabs .nav-link.active {
+  background: #e50914;
+  color: #fff;
+}
+.tab-content {
+  background: #181818;
+  border-radius: 0 0 8px 8px;
+  padding: 0;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  min-height: 400px;
+  position: relative;
+}
+/* Detail page layout improvements */
+#movie-detail-row, #series-detail-row {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+#movie-detail-row > div, #series-detail-row > div {
+  min-width: 320px;
+  flex: 1 1 320px;
+}
+.ratio.ratio-16x9 {
+  position: relative;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto 1.2rem auto;
+  padding-bottom: 56.25%;
+  height: 0;
+}
+.ratio.ratio-16x9 iframe {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%; border: none;
+  border-radius: 12px;
+}
+.tab-content {
+  position: relative;
+  min-height: 400px;
+}
+.tab-pane {
+  display: none;
+  width: 100%;
+  height: 400px;
+}
+.tab-pane.show.active {
+  display: block;
+}
+/* Responsive for detail pages */
+@media (max-width: 900px) {
+  .navbar .container { flex-direction: column; gap: 1rem; }
+  .animated-grid, .carousel-scroll { justify-content: center; }
+  #movie-detail-row, #series-detail-row { flex-direction: column; gap: 1.5rem; }
+}
+@media (max-width: 600px) {
+  .navbar-nav { gap: 1rem; }
+  .animated-card, .carousel-card { min-width: 140px; max-width: 140px; min-height: 200px; }
+  .animated-card img, .carousel-card img { height: 200px; }
+} 
+
+/* Hero section for home page */
+.hero-section {
+  background: linear-gradient(90deg, #181818 60%, #e50914 100%);
+  color: #fff;
+  padding: 3rem 2rem 2rem 2rem;
+  text-align: center;
+  border-radius: 0 0 32px 32px;
+  margin-bottom: 2.5rem;
+  box-shadow: 0 4px 32px #0005;
+}
+.hero-title {
+  font-size: 2.8rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  letter-spacing: 1px;
+}
+.hero-subtitle {
+  font-size: 1.3rem;
+  color: #fff9;
+  margin-bottom: 0;
+}
+
+/* Highlight sections */
+.highlight-section {
+  margin-bottom: 2.5rem;
+  padding: 1.5rem 0 0.5rem 0;
+  background: #181818;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px #0003;
+}
+.section-title {
+  font-size: 1.7rem;
+  font-weight: 600;
+  color: #e50914;
+  margin-bottom: 1.2rem;
+  margin-left: 1.2rem;
+  letter-spacing: 0.5px;
+}
+
+/* Carousel improvements */
+.carousel-row {
+  position: relative;
+  margin-bottom: 1.5rem;
+  padding: 0 1.2rem;
+}
+.carousel-scroll {
+  display: flex;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  gap: 1.5rem;
+  padding-bottom: 10px;
+  scroll-snap-type: x mandatory;
+  background: none;
+}
+.carousel-card, .animated-card {
+  border: 2px solid #222;
+  box-shadow: 0 2px 12px #000a, 0 0px 0px #e5091422;
+  transition: box-shadow 0.2s, border 0.2s, transform 0.2s;
+}
+.carousel-card:hover, .animated-card:hover {
+  border: 2px solid #e50914;
+  box-shadow: 0 8px 32px #e5091440, 0 2px 12px #000a;
+  transform: scale(1.08);
+}
+.carousel-arrow {
+  background: #e50914;
+  color: #fff;
+  border: none;
+  font-size: 2.2rem;
+  width: 44px;
+  height: 70px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px #000a;
+  margin: 0 0.5rem;
+  transition: background 0.2s, transform 0.2s;
+}
+.carousel-arrow:hover {
+  background: #b0060f;
+  transform: scale(1.12);
+}
+
+/* Section spacing for all pages */
+main#main-content > section, main#main-content > .carousel-row {
+  margin-bottom: 2.5rem;
+}
+
+/* Responsive improvements */
+@media (max-width: 900px) {
+  .hero-title { font-size: 2.1rem; }
+  .section-title { font-size: 1.2rem; }
+  .highlight-section { padding: 1rem 0 0.5rem 0; }
+}
+@media (max-width: 600px) {
+  .hero-section { padding: 1.5rem 0.5rem 1rem 0.5rem; border-radius: 0 0 16px 16px; }
+  .section-title { margin-left: 0.5rem; }
+} 
+
+/* --- Filter UI Modernization --- */
+#movie-filter-form, #series-filter-form {
+  background: #181818;
+  border-radius: 1.5rem;
+  box-shadow: 0 2px 16px #0004;
+  padding: 1rem 1.5rem;
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 1.2rem;
+  align-items: center;
+  flex-wrap: wrap;
+  animation: fadeInDown 0.7s cubic-bezier(.4,2,.3,1);
+}
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+#movie-filter-form input, #movie-filter-form select,
+#series-filter-form input, #series-filter-form select {
+  border-radius: 1.2rem;
+  border: none;
+  padding: 0.5rem 1.2rem 0.5rem 2.2rem;
+  font-size: 1rem;
+  background: #222;
+  color: #fff;
+  box-shadow: 0 1px 4px #0002;
+  transition: box-shadow 0.2s, background 0.2s;
+  outline: none;
+  position: relative;
+}
+#movie-filter-form input:focus, #movie-filter-form select:focus,
+#series-filter-form input:focus, #series-filter-form select:focus {
+  background: #181818;
+  box-shadow: 0 0 0 2px #e50914;
+}
+#movie-filter-form .form-control, #series-filter-form .form-control {
+  position: relative;
+}
+#movie-filter-form .form-control::before, #series-filter-form .form-control::before {
+  content: '\1F50D';
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #e50914;
+  font-size: 1.1rem;
+  pointer-events: none;
+}
+#movie-filter-form .form-select, #series-filter-form .form-select {
+  background: #222 url('data:image/svg+xml;utf8,<svg fill="white" height="16" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat right 1.2rem center/1.2rem 1.2rem;
+  appearance: none;
+  padding-right: 2.5rem;
+}
+#movie-filter-form .btn, #series-filter-form .btn {
+  background: linear-gradient(90deg, #e50914 60%, #b0060f 100%);
+  color: #fff;
+  border: none;
+  border-radius: 2rem;
+  padding: 0.5rem 1.5rem;
+  font-size: 1.08rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px #e5091422;
+  transition: background 0.2s, transform 0.15s;
+}
+#movie-filter-form .btn:hover, #series-filter-form .btn:hover {
+  background: linear-gradient(90deg, #b0060f 60%, #e50914 100%);
+  transform: scale(1.07);
+}
+
+/* --- Card Animation Enhancements --- */
+.animated-card, .carousel-card {
+  box-shadow: 0 2px 16px #000a, 0 0px 0px #e5091422;
+  border: 2px solid #222;
+  transition: box-shadow 0.22s, border 0.22s, transform 0.22s, filter 0.22s;
+  filter: brightness(0.98) saturate(1.1);
+}
+.animated-card:hover, .carousel-card:hover {
+  border: 2px solid #e50914;
+  box-shadow: 0 8px 32px #e5091440, 0 2px 12px #000a;
+  transform: scale(1.10) rotate(-1deg);
+  filter: brightness(1.08) saturate(1.2);
+}
+.animated-card:active, .carousel-card:active {
+  transform: scale(0.97) rotate(1deg);
+  filter: brightness(0.95);
+}
+
+/* --- Page Fade-in Animation --- */
+#main-content {
+  animation: fadeInPage 1.1s cubic-bezier(.4,2,.3,1);
+}
+@keyframes fadeInPage {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Extra Detailing --- */
+::-webkit-scrollbar {
+  width: 8px;
+  background: #181818;
+}
+::-webkit-scrollbar-thumb {
+  background: #e50914;
+  border-radius: 8px;
+}
+
+/* Modern font and color palette */
+body {
+  font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+  background: linear-gradient(120deg, #181818 70%, #e50914 100%);
+  color: #fff;
+}
+
+h2, h4, .section-title {
+  letter-spacing: 1px;
+  text-shadow: 0 2px 8px #000a;
+}
+
+footer {
+  font-size: 1rem;
+  color: #fff9;
+  background: #181818;
+  border-radius: 1rem 1rem 0 0;
+  box-shadow: 0 -2px 12px #0005;
+  padding: 1rem 0 0.5rem 0;
+  margin-top: 2rem;
+} 
+
+/* --- Highlight selected episode button --- */
+.episode-btn.active {
+  border: 2px solid #e50914 !important;
+  box-shadow: 0 4px 16px #e5091440, 0 2px 8px #000a;
+  background: #1a1a1a !important;
+  filter: brightness(1.08) saturate(1.2);
+  position: relative;
+  z-index: 2;
+}
+.episode-btn.active .fw-bold {
+  color: #e50914;
+}
+
+/* --- Loading spinner for episode/player changes --- */
+.spinner {
+  display: block;
+  margin: 2rem auto;
+  width: 48px;
+  height: 48px;
+  border: 5px solid #222;
+  border-top: 5px solid #e50914;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Smooth fade for episode/player updates --- */
+#season-content, .tab-content {
+  transition: opacity 0.35s cubic-bezier(.4,2,.3,1);
+} 
+
+/* --- Movie Detail Netflix-like Redesign --- */
+.movie-hero {
+  position: relative;
+  min-height: 420px;
+  background: #181818;
+  display: flex;
+  align-items: flex-end;
+  padding: 0;
+  margin-bottom: 2.5rem;
+  border-radius: 0 0 32px 32px;
+  overflow: hidden;
+  box-shadow: 0 4px 32px #0008;
+}
+.movie-hero-bg {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(90deg, #181818 60%, #e50914 100%);
+  opacity: 0.7;
+  z-index: 1;
+}
+.movie-hero-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  gap: 2.5rem;
+  align-items: flex-end;
+  width: 100%;
+  padding: 2.5rem 4vw 2.5rem 4vw;
+}
+.movie-poster-card {
+  min-width: 240px;
+  max-width: 260px;
+  background: #222;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px #000a;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0.5rem 0.5rem 0 0.5rem;
+}
+.movie-poster-card img {
+  width: 100%;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px #0008;
+}
+.movie-info-card {
+  background: #181818cc;
+  border-radius: 18px;
+  box-shadow: 0 2px 12px #0007;
+  padding: 2rem 2.5rem 2rem 2rem;
+  color: #fff;
+  min-width: 320px;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+.movie-title-main {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.2rem;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 8px #000a;
+}
+.movie-meta {
+  display: flex;
+  gap: 1.2rem;
+  font-size: 1.1rem;
+  color: #fff9;
+  align-items: center;
+}
+.movie-meta .badge {
+  background: #e50914;
+  color: #fff;
+  border-radius: 8px;
+  padding: 0.2rem 0.7rem;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+.movie-overview {
+  font-size: 1.1rem;
+  color: #fffcc;
+  margin-top: 0.5rem;
+}
+.movie-player-section {
+  background: #222;
+  border-radius: 18px;
+  box-shadow: 0 2px 16px #0007;
+  margin: 0 auto 2.5rem auto;
+  max-width: 900px;
+  padding: 2rem 2vw 1.5rem 2vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.movie-player-section h4 {
+  color: #e50914;
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+.movie-cast-section {
+  background: #181818;
+  border-radius: 18px;
+  box-shadow: 0 2px 16px #0005;
+  margin: 0 auto 2.5rem auto;
+  max-width: 900px;
+  padding: 2rem 2vw 1.5rem 2vw;
+}
+.movie-cast-list {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scroll-snap-type: x mandatory;
+}
+.movie-cast-list::-webkit-scrollbar { display: none; }
+.movie-cast-card {
+  min-width: 110px;
+  max-width: 110px;
+  background: #222;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px #0007;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.7rem 0.5rem 0.5rem 0.5rem;
+  scroll-snap-align: start;
+}
+.movie-cast-card img {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 2px 8px #000a;
+}
+.movie-cast-card .cast-name {
+  font-size: 1rem;
+  color: #fff;
+  text-align: center;
+  font-weight: 500;
+}
+@media (max-width: 900px) {
+  .movie-hero-content { flex-direction: column; align-items: center; gap: 1.5rem; padding: 2rem 2vw 2rem 2vw; }
+  .movie-info-card { min-width: 0; max-width: 100%; padding: 1.2rem 1rem; }
+  .movie-poster-card { min-width: 160px; max-width: 180px; }
+}
+@media (max-width: 600px) {
+  .movie-hero { min-height: 320px; border-radius: 0 0 16px 16px; }
+  .movie-hero-content { padding: 1rem 0.5rem 1rem 0.5rem; }
+  .movie-info-card { padding: 1rem 0.5rem; }
+  .movie-poster-card { min-width: 100px; max-width: 120px; }
+} 
+
+/* --- Series Detail Netflix-like Redesign --- */
+.series-hero {
+  position: relative;
+  min-height: 420px;
+  background: #181818;
+  display: flex;
+  align-items: flex-end;
+  padding: 0;
+  margin-bottom: 2.5rem;
+  border-radius: 0 0 32px 32px;
+  overflow: hidden;
+  box-shadow: 0 4px 32px #0008;
+}
+.series-hero-bg {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(90deg, #181818 60%, #e50914 100%);
+  opacity: 0.7;
+  z-index: 1;
+}
+.series-hero-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  gap: 2.5rem;
+  align-items: flex-end;
+  width: 100%;
+  padding: 2.5rem 4vw 2.5rem 4vw;
+}
+.series-poster-card {
+  min-width: 240px;
+  max-width: 260px;
+  background: #222;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px #000a;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0.5rem 0.5rem 0 0.5rem;
+}
+.series-poster-card img {
+  width: 100%;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px #0008;
+}
+.series-info-card {
+  background: #181818cc;
+  border-radius: 18px;
+  box-shadow: 0 2px 12px #0007;
+  padding: 2rem 2.5rem 2rem 2rem;
+  color: #fff;
+  min-width: 320px;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+.series-title-main {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.2rem;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 8px #000a;
+}
+.series-meta {
+  display: flex;
+  gap: 1.2rem;
+  font-size: 1.1rem;
+  color: #fff9;
+  align-items: center;
+}
+.series-meta .badge {
+  background: #e50914;
+  color: #fff;
+  border-radius: 8px;
+  padding: 0.2rem 0.7rem;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+.series-overview {
+  font-size: 1.1rem;
+  color: #fffcc;
+  margin-top: 0.5rem;
+}
+.series-player-section {
+  background: #222;
+  border-radius: 18px;
+  box-shadow: 0 2px 16px #0007;
+  margin: 0 auto 2.5rem auto;
+  max-width: 1000px;
+  padding: 2rem 2vw 1.5rem 2vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+}
+.series-player-section h4 {
+  color: #e50914;
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+.series-season-tabs {
+  display: flex;
+  gap: 0.7rem;
+  margin-bottom: 1.2rem;
+  flex-wrap: wrap;
+}
+.series-season-tab {
+  background: #222;
+  color: #fff;
+  border: none;
+  border-radius: 2rem;
+  padding: 0.4rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.15s;
+  box-shadow: 0 2px 8px #0005;
+}
+.series-season-tab.active, .series-season-tab:focus {
+  background: #e50914;
+  color: #fff;
+  transform: scale(1.08);
+}
+/* --- Episode Window Wrapper --- */
+.series-episodes-window {
+  background: #222;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px #0007;
+  padding: 1.2rem 1rem 1.2rem 1rem;
+  margin: 0 auto 2rem auto;
+  max-width: 1000px;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: visible;
+  position: relative;
+}
+@media (max-width: 900px) {
+  .series-episodes-window { max-width: 100%; padding: 1rem 0.3rem; }
+}
+
+/* --- Horizontal Scrollable Episodes UI --- */
+.series-episodes-list {
+  display: flex;
+  flex-direction: row;
+  gap: 1.2rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0;
+  scroll-snap-type: x mandatory;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+}
+.series-episodes-list::-webkit-scrollbar { display: none; }
+.series-episode-card {
+  min-width: 140px;
+  max-width: 160px;
+  background: #222;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px #0007;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s, border 0.2s;
+  scroll-snap-align: start;
+  padding: 0.3rem 0.3rem 0.2rem 0.3rem;
+  font-size: 0.97rem;
+  margin-bottom: 0.2rem;
+  white-space: normal;
+}
+.series-episode-card img {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 0.3rem;
+}
+.series-episode-card .ep-title {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0.3rem 0 0.1rem 0.2rem;
+}
+.series-episode-card .ep-meta {
+  font-size: 0.85rem;
+  color: #fff9;
+  margin-left: 0.2rem;
+}
+.series-episode-card .ep-overview {
+  font-size: 0.89rem;
+  color: #fffcc;
+  margin: 0.2rem 0.2rem 0.4rem 0.2rem;
+}
+.series-episode-card.active {
+  border: 2px solid #e50914;
+  box-shadow: 0 4px 16px #e5091440, 0 2px 8px #000a;
+  background: #1a1a1a;
+  z-index: 2;
+}
+.series-episode-card:hover {
+  box-shadow: 0 6px 24px #e5091440, 0 2px 8px #000a;
+  transform: scale(1.04);
+  border-color: #e50914;
+  z-index: 3;
+}
+
+.series-cast-section {
+  background: #181818;
+  border-radius: 18px;
+  box-shadow: 0 2px 16px #0005;
+  margin: 0 auto 2.5rem auto;
+  max-width: 1000px;
+  padding: 2rem 2vw 1.5rem 2vw;
+}
+.series-cast-list {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scroll-snap-type: x mandatory;
+}
+.series-cast-list::-webkit-scrollbar { display: none; }
+.series-cast-card {
+  min-width: 110px;
+  max-width: 110px;
+  background: #222;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px #0007;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.7rem 0.5rem 0.5rem 0.5rem;
+  scroll-snap-align: start;
+}
+.series-cast-card img {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 2px 8px #000a;
+}
+.series-cast-card .cast-name {
+  font-size: 1rem;
+  color: #fff;
+  text-align: center;
+  font-weight: 500;
+}
+@media (max-width: 900px) {
+  .series-hero-content { flex-direction: column; align-items: center; gap: 1.5rem; padding: 2rem 2vw 2rem 2vw; }
+  .series-info-card { min-width: 0; max-width: 100%; padding: 1.2rem 1rem; }
+  .series-poster-card { min-width: 160px; max-width: 180px; }
+}
+@media (max-width: 600px) {
+  .series-hero { min-height: 320px; border-radius: 0 0 16px 16px; }
+  .series-hero-content { padding: 1rem 0.5rem 1rem 0.5rem; }
+  .series-info-card { padding: 1rem 0.5rem; }
+  .series-poster-card { min-width: 100px; max-width: 120px; }
+} 
+
+/* --- Player Sizing Tweaks --- */
+.movie-player-section,
+.series-player-section {
+  max-width: 1000px;
+  padding: 1.2rem 0.5rem 1.2rem 0.5rem;
+}
+
+.movie-player-section iframe,
+.series-player-section iframe,
+.tab-content iframe {
+  width: 100%;
+  max-width: 100%;
+  height: 480px;
+  min-height: 220px;
+  border-radius: 12px;
+  background: #000;
+  margin: 0 auto 1.2rem auto;
+  display: block;
+} 
