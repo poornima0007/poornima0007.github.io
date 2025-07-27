@@ -1,6 +1,50 @@
 // Load config
 // Make sure to include <script src="config.js"></script> before this script in your HTML
 
+// Enhanced helper function to filter out adult content
+function filterAdultContent(items) {
+  // Adult keywords to filter out
+  const adultKeywords = [
+    'adult', 'nude', 'nudity', 'sex', 'sexual', 'erotic', 'erotica', 'porn', 'pornographic',
+    'explicit', 'mature', 'adult content', 'adult film', 'adult movie', 'adult series',
+    'seikan', 'shiken', 'intimacy', 'desire', 'stepmom', 'stepmother', 'skin like sun',
+    '14 and under', 'too young', 'oppa-man', 'lingerie', 'suggestive', 'provocative',
+    'seductive', 'tempting', 'forbidden', 'taboo', 'mature content', 'adult themes',
+    'romance adult', 'adult romance', 'mature romance', 'erotic romance'
+  ];
+  
+  // Adult content ratings
+  const adultRatings = ['NC-17', 'X', 'XXX', '18+', 'R18', '18A'];
+  
+  return items.filter(item => {
+    // Check if explicitly marked as adult
+    if (item.adult === true) return false;
+    
+    // Check content rating
+    if (item.content_rating && adultRatings.includes(item.content_rating)) return false;
+    
+    // Check title for adult keywords (case insensitive)
+    const title = (item.title || item.name || '').toLowerCase();
+    if (adultKeywords.some(keyword => title.includes(keyword.toLowerCase()))) return false;
+    
+    // Check overview/description for adult keywords
+    const overview = (item.overview || '').toLowerCase();
+    if (adultKeywords.some(keyword => overview.includes(keyword.toLowerCase()))) return false;
+    
+    // Check original title for adult keywords
+    const originalTitle = (item.original_title || item.original_name || '').toLowerCase();
+    if (adultKeywords.some(keyword => originalTitle.includes(keyword.toLowerCase()))) return false;
+    
+    // Additional checks for specific problematic patterns
+    if (title.includes('stepmom') || title.includes('stepmother')) return false;
+    if (title.includes('14 and under') || title.includes('too young')) return false;
+    if (title.includes('seikan') || title.includes('shiken')) return false;
+    if (title.includes('oppa-man')) return false;
+    
+    return true;
+  });
+}
+
 async function fetchTMDB(endpoint, params = {}) {
   params['api_key'] = TMDB_API_KEY;
   const url = `${TMDB_BASE_URL}${endpoint}?` + new URLSearchParams(params).toString();
@@ -31,22 +75,27 @@ async function renderHomeCarousels() {
     // Top 10 Movies
     if (top10MoviesRow) {
       const topMovies = await fetchTMDB('/movie/top_rated', { page: 1 });
-      top10MoviesRow.innerHTML = topMovies.results.slice(0, 10).map(createMovieCard).join('');
+      const filteredMovies = filterAdultContent(topMovies.results);
+      top10MoviesRow.innerHTML = filteredMovies.slice(0, 10).map(createMovieCard).join('');
     }
     // Top 10 Series
     if (top10SeriesRow) {
       const topSeries = await fetchTMDB('/tv/top_rated', { page: 1 });
-      top10SeriesRow.innerHTML = topSeries.results.slice(0, 10).map(createSeriesCard).join('');
+      const filteredSeries = filterAdultContent(topSeries.results);
+      top10SeriesRow.innerHTML = filteredSeries.slice(0, 10).map(createSeriesCard).join('');
     }
     // Trending
     const trending = await fetchTMDB('/trending/movie/week');
-    trendingRow.innerHTML = trending.results.slice(0, 12).map(createMovieCard).join('');
+    const filteredTrending = filterAdultContent(trending.results);
+    trendingRow.innerHTML = filteredTrending.slice(0, 12).map(createMovieCard).join('');
     // Popular
     const popular = await fetchTMDB('/movie/popular');
-    popularRow.innerHTML = popular.results.slice(0, 12).map(createMovieCard).join('');
+    const filteredPopular = filterAdultContent(popular.results);
+    popularRow.innerHTML = filteredPopular.slice(0, 12).map(createMovieCard).join('');
     // Recommended
     const recommended = await fetchTMDB('/discover/movie', { sort_by: 'vote_average.desc', 'vote_count.gte': 1000 });
-    recommendedRow.innerHTML = recommended.results.slice(0, 12).map(createMovieCard).join('');
+    const filteredRecommended = filterAdultContent(recommended.results);
+    recommendedRow.innerHTML = filteredRecommended.slice(0, 12).map(createMovieCard).join('');
   } catch (e) {
     if (top10MoviesRow) top10MoviesRow.innerHTML = '<div style="color:#e50914">Failed to load.</div>';
     if (top10SeriesRow) top10SeriesRow.innerHTML = '<div style="color:#e50914">Failed to load.</div>';
@@ -108,7 +157,30 @@ async function renderMoviesList(params = {}) {
       data = await fetchTMDB('/discover/movie', discoverParams);
     }
     if (data.results && data.results.length > 0) {
-      grid.innerHTML = data.results.slice(0, 20).map(createMovieCard).join('');
+      let filteredMovies = filterAdultContent(data.results);
+      
+      // Additional filtering for Romance genre (ID 10749) to be more strict
+      if (params.genre === '10749') {
+        const romanceAdultKeywords = [
+          'erotic', 'sexy', 'seductive', 'tempting', 'forbidden', 'taboo', 'mature',
+          'adult', 'nude', 'nudity', 'sexual', 'intimate', 'passionate', 'steamy',
+          'romantic adult', 'adult romantic', 'mature romantic', 'erotic romantic',
+          'stepmom', 'stepmother', 'forbidden love', 'secret affair', 'illicit',
+          'provocative', 'suggestive', 'alluring', 'enticing', 'tempting'
+        ];
+        
+        filteredMovies = filteredMovies.filter(movie => {
+          const title = (movie.title || '').toLowerCase();
+          const overview = (movie.overview || '').toLowerCase();
+          
+          // Filter out movies with adult romance keywords
+          return !romanceAdultKeywords.some(keyword => 
+            title.includes(keyword) || overview.includes(keyword)
+          );
+        });
+      }
+      
+      grid.innerHTML = filteredMovies.slice(0, 20).map(createMovieCard).join('');
     } else {
       grid.innerHTML = '<div style="color:#e50914">No movies found.</div>';
     }
@@ -172,7 +244,8 @@ async function renderSeriesList(params = {}) {
       data = await fetchTMDB('/discover/tv', discoverParams);
     }
     if (data.results && data.results.length > 0) {
-      grid.innerHTML = data.results.slice(0, 20).map(createSeriesCard).join('');
+      const filteredSeries = filterAdultContent(data.results);
+      grid.innerHTML = filteredSeries.slice(0, 20).map(createSeriesCard).join('');
     } else {
       grid.innerHTML = '<div style="color:#e50914">No series found.</div>';
     }
@@ -207,7 +280,7 @@ if (document.getElementById('series-grid')) {
     const year = document.getElementById('series-year').value.trim();
     renderSeriesList({ query, genre, year });
   });
-}
+} 
 
 // --- Movie Detail Page Logic ---
 async function renderMovieDetail() {
@@ -259,10 +332,10 @@ async function renderMovieDetail() {
     ];
     // Player
     playerSection.innerHTML = `
-      <h4>Watch Now</h4>
-      <ul class="nav nav-tabs" id="streamTab" role="tablist" style="margin-bottom:0;">
+        <h4>Watch Now</h4>
+          <ul class="nav nav-tabs" id="streamTab" role="tablist" style="margin-bottom:0;">
         ${streamUrls.map((url, i) => `<li class="nav-item" role="presentation"><button class="nav-link${i===0?' active':''}" data-source="${i}">Source ${i+1}</button></li>`).join('')}
-      </ul>
+          </ul>
       <div class="tab-content" id="movie-player-frame">
         <iframe src="${streamUrls[0]}" width="100%" height="400" allowfullscreen style="border:none;"></iframe>
       </div>
@@ -407,14 +480,14 @@ async function renderSeriesDetail() {
     await renderPlayerSection();
     // Cast
     castSection.innerHTML = `
-      <h4>Cast</h4>
+        <h4>Cast</h4>
       <div class="series-cast-list">
-        ${cast.map(actor => `
+          ${cast.map(actor => `
           <div class="series-cast-card">
             ${actor.profile_path ? `<img src="https://image.tmdb.org/t/p/w185${actor.profile_path}" alt="${actor.name}">` : '<div style="width:70px;height:70px;border-radius:50%;background:#333;"></div>'}
             <div class="cast-name">${actor.name}</div>
-          </div>
-        `).join('')}
+            </div>
+          `).join('')}
       </div>
     `;
   } catch (e) {
@@ -442,14 +515,16 @@ async function renderSearchResults() {
     // Movies
     const movieData = await fetchTMDB('/search/movie', { query, page: 1 });
     if (movieData.results && movieData.results.length > 0) {
-      moviesGrid.innerHTML = movieData.results.slice(0, 12).map(createMovieCard).join('');
+      const filteredMovies = filterAdultContent(movieData.results);
+      moviesGrid.innerHTML = filteredMovies.slice(0, 12).map(createMovieCard).join('');
     } else {
       moviesGrid.innerHTML = '<div style="color:#e50914">No movies found.</div>';
     }
     // Series
     const seriesData = await fetchTMDB('/search/tv', { query, page: 1 });
     if (seriesData.results && seriesData.results.length > 0) {
-      seriesGrid.innerHTML = seriesData.results.slice(0, 12).map(createSeriesCard).join('');
+      const filteredSeries = filterAdultContent(seriesData.results);
+      seriesGrid.innerHTML = filteredSeries.slice(0, 12).map(createSeriesCard).join('');
     } else {
       seriesGrid.innerHTML = '<div style="color:#e50914">No series found.</div>';
     }
@@ -466,11 +541,11 @@ async function renderSearchResults() {
       let actorSeries = [];
       try {
         const actorMoviesData = await fetchTMDB(`/person/${actor.id}/movie_credits`);
-        actorMovies = actorMoviesData.cast || [];
+        actorMovies = filterAdultContent(actorMoviesData.cast || []);
       } catch {}
       try {
         const actorSeriesData = await fetchTMDB(`/person/${actor.id}/tv_credits`);
-        actorSeries = actorSeriesData.cast || [];
+        actorSeries = filterAdultContent(actorSeriesData.cast || []);
       } catch {}
       // Movies section
       if (actorMovies.length > 0) {
