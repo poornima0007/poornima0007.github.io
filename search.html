@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Search movies, series, and actors on Poflix.">
+  <title>Poflix — Search Results</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">Poflix</a>
+      <form class="search-form" action="search.html" method="get" aria-label="Search site">
+        <input type="text" name="q" placeholder="Search movies, series, actors..." aria-label="Search input">
+        <button type="submit" aria-label="Search">Search</button>
+      </form>
+      <button class="navbar-toggle" id="navbar-toggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="navbar-nav" id="navbar-nav">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="movies.html">Movies</a></li>
+        <li><a href="series.html">Series</a></li>
+        <li><a href="profile.html">Profile</a></li>
+        <li><a href="donate.html">Donate</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main id="main-content">
+    <h2 id="search-title">Search Results</h2>
+    <h4>🎬 Movies</h4>
+    <div class="animated-grid" id="search-movies"></div>
+    <h4>📺 Series</h4>
+    <div class="animated-grid" id="search-series"></div>
+    <h4>🎭 Actors</h4>
+    <div style="padding: 0 clamp(1rem, 3vw, 2rem);" id="search-actor"></div>
+  </main>
+
+  <footer>
+    <div class="footer-content">
+      <div class="footer-brand">Poflix</div>
+      <div class="footer-links">
+        <a href="movies.html">Movies</a>
+        <a href="series.html">Series</a>
+        <a href="profile.html">Profile</a>
+        <a href="donate.html">Donate</a>
+      </div>
+    </div>
+    <div class="footer-divider"></div>
+    <div class="footer-copy">Poflix &copy; 2025. Not affiliated with Netflix or TMDb. Powered by TMDb API.</div>
+  </footer>
+
+  <button class="back-to-top" id="back-to-top" aria-label="Back to top">↑</button>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
