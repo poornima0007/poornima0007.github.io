@@ -100,13 +100,16 @@ function initSearchAutocomplete(inputEl, options = {}) {
     dropdown.classList.add('open');
     try {
       let results = [];
+      let actors = [];
       if (type === 'multi') {
-        const [movieData, tvData] = await Promise.all([
+        const [movieData, tvData, personData] = await Promise.all([
           fetchTMDB('/search/movie', { query, page: 1 }),
-          fetchTMDB('/search/tv', { query, page: 1 })
+          fetchTMDB('/search/tv', { query, page: 1 }),
+          fetchTMDB('/search/person', { query, page: 1 })
         ]);
-        const movies = filterAdultContent(movieData.results || []).slice(0, 5).map(m => ({ ...m, media_type: 'movie' }));
-        const series = filterAdultContent(tvData.results || []).slice(0, 5).map(s => ({ ...s, media_type: 'tv' }));
+        const movies = filterAdultContent(movieData.results || []).slice(0, 4).map(m => ({ ...m, media_type: 'movie' }));
+        const series = filterAdultContent(tvData.results || []).slice(0, 4).map(s => ({ ...s, media_type: 'tv' }));
+        actors = (personData.results || []).filter(p => !p.adult).slice(0, 3).map(p => ({ ...p, media_type: 'person' }));
         results = [...movies, ...series];
       } else if (type === 'movie') {
         const data = await fetchTMDB('/search/movie', { query, page: 1 });
@@ -115,11 +118,11 @@ function initSearchAutocomplete(inputEl, options = {}) {
         const data = await fetchTMDB('/search/tv', { query, page: 1 });
         results = filterAdultContent(data.results || []).slice(0, 8).map(s => ({ ...s, media_type: 'tv' }));
       }
-      if (results.length === 0) {
+      if (results.length === 0 && actors.length === 0) {
         dropdown.innerHTML = '<div class="search-dropdown-empty">No results found</div>';
         return;
       }
-      dropdown.innerHTML = results.map(item => {
+      let html = results.map(item => {
         const title = item.title || item.name || '';
         const year = (item.release_date || item.first_air_date || '').slice(0, 4);
         const rating = item.vote_average ? item.vote_average.toFixed(1) : '';
@@ -133,11 +136,29 @@ function initSearchAutocomplete(inputEl, options = {}) {
             <div class="sdi-meta">
               <span class="sdi-type">${typeLabel}</span>
               ${year ? `<span>${year}</span>` : ''}
-              ${rating ? `<span>⭐ ${rating}</span>` : ''}
+              ${rating ? `<span>\u2b50 ${rating}</span>` : ''}
             </div>
           </div>
         </a>`;
       }).join('');
+      // Add actors section
+      if (actors.length > 0) {
+        html += actors.map(actor => {
+          const photo = actor.profile_path ? `https://image.tmdb.org/t/p/w92${actor.profile_path}` : '';
+          const knownFor = (actor.known_for || []).slice(0, 2).map(k => k.title || k.name).filter(Boolean).join(', ');
+          return `<a href="search.html?q=${encodeURIComponent(actor.name)}" class="search-dropdown-item">
+            ${photo ? `<img src="${photo}" alt="${actor.name}" style="border-radius:50%;width:44px;height:44px;object-fit:cover;">` : '<div style="width:44px;height:44px;border-radius:50%;background:var(--surface);"></div>'}
+            <div class="sdi-info">
+              <div class="sdi-title">${actor.name}</div>
+              <div class="sdi-meta">
+                <span class="sdi-type" style="background:rgba(139,92,246,0.15);color:#a78bfa;">Actor</span>
+                ${knownFor ? `<span>${knownFor}</span>` : ''}
+              </div>
+            </div>
+          </a>`;
+        }).join('');
+      }
+      dropdown.innerHTML = html;
     } catch {
       dropdown.innerHTML = '<div class="search-dropdown-empty">Search failed</div>';
     }
@@ -896,36 +917,72 @@ async function renderSearchResults() {
     const personData = await fetchTMDB('/search/person', { query });
     if (personData.results && personData.results.length > 0) {
       const actor = personData.results[0];
-      let actorHtml = `<div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;">
-        ${actor.profile_path ? `<img src="https://image.tmdb.org/t/p/w185${actor.profile_path}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--border-subtle);" alt="${actor.name}">` : ''}
-        <div><strong style="font-size:1.2rem;">${actor.name}</strong><br><span style="color:var(--text-muted);font-size:0.85rem;">Known for: ${actor.known_for_department || 'Acting'}</span></div>
-      </div>`;
 
+      // Fetch full actor details (bio, birthday, etc.) + credits in parallel
+      let actorDetails = {};
       let actorMovies = [], actorSeries = [];
       try {
-        const actorMoviesData = await fetchTMDB(`/person/${actor.id}/movie_credits`);
-        actorMovies = filterAdultContent(actorMoviesData.cast || []);
+        const [details, movieCredits, tvCredits] = await Promise.all([
+          fetchTMDB(`/person/${actor.id}`),
+          fetchTMDB(`/person/${actor.id}/movie_credits`),
+          fetchTMDB(`/person/${actor.id}/tv_credits`)
+        ]);
+        actorDetails = details || {};
+        actorMovies = filterAdultContent(movieCredits.cast || []);
+        actorSeries = filterAdultContent(tvCredits.cast || []);
       } catch {}
-      try {
-        const actorSeriesData = await fetchTMDB(`/person/${actor.id}/tv_credits`);
-        actorSeries = filterAdultContent(actorSeriesData.cast || []);
-      } catch {}
+
+      const bio = actorDetails.biography || '';
+      const birthday = actorDetails.birthday || '';
+      const deathday = actorDetails.deathday || '';
+      const birthplace = actorDetails.place_of_birth || '';
+      const age = birthday ? Math.floor((Date.now() - new Date(birthday).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : '';
+
+      // Truncate bio for display
+      const bioShort = bio.length > 400 ? bio.slice(0, 400) + '...' : bio;
+
+      let actorHtml = `<div class="actor-profile-card" style="background:var(--bg-glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--border-subtle);border-radius:var(--radius-xl);padding:1.5rem;margin-bottom:2rem;display:flex;gap:1.5rem;align-items:flex-start;flex-wrap:wrap;">
+        <div style="flex-shrink:0;text-align:center;">
+          ${actor.profile_path ? `<img src="https://image.tmdb.org/t/p/w185${actor.profile_path}" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid var(--accent);box-shadow:0 0 20px var(--accent-glow);" alt="${actor.name}">` : '<div style="width:120px;height:120px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:2.5rem;">🎭</div>'}
+        </div>
+        <div style="flex:1;min-width:200px;">
+          <div style="font-size:1.4rem;font-weight:800;margin-bottom:0.3rem;">${actor.name}</div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.6rem;">
+            <span style="background:rgba(139,92,246,0.15);color:#a78bfa;padding:0.2rem 0.6rem;border-radius:var(--radius-full);font-size:0.78rem;font-weight:600;">${actorDetails.known_for_department || actor.known_for_department || 'Acting'}</span>
+            ${actorMovies.length > 0 ? `<span style="background:var(--accent-soft);color:var(--accent);padding:0.2rem 0.6rem;border-radius:var(--radius-full);font-size:0.78rem;font-weight:600;">🎬 ${actorMovies.length} Movies</span>` : ''}
+            ${actorSeries.length > 0 ? `<span style="background:rgba(56,189,248,0.12);color:#38bdf8;padding:0.2rem 0.6rem;border-radius:var(--radius-full);font-size:0.78rem;font-weight:600;">📺 ${actorSeries.length} Series</span>` : ''}
+          </div>
+          <div style="display:flex;gap:1rem;flex-wrap:wrap;font-size:0.82rem;color:var(--text-muted);margin-bottom:0.6rem;">
+            ${birthday ? `<span>🎂 ${birthday}${age ? ` (${deathday ? 'was ' : ''}${age} yrs)` : ''}</span>` : ''}
+            ${deathday ? `<span>✝ ${deathday}</span>` : ''}
+            ${birthplace ? `<span>📍 ${birthplace}</span>` : ''}
+          </div>
+          ${bioShort ? `<div id="actor-bio-text" style="font-size:0.88rem;color:var(--text-secondary);line-height:1.65;">${bioShort}${bio.length > 400 ? `<button id="actor-bio-expand" style="background:none;border:none;color:var(--accent);cursor:pointer;font-family:inherit;font-size:0.85rem;padding-left:0.3rem;">Read more</button>` : ''}</div>` : ''}
+        </div>
+      </div>`;
 
       if (actorMovies.length > 0) {
         const showCount = 8;
-        actorHtml += `<h4 style="margin:1rem 0 0.8rem;">🎬 Movies</h4><div class="animated-grid" id="actor-movies-grid">${actorMovies.slice(0, showCount).map(createMovieCard).join('')}</div>`;
+        actorHtml += `<h4 style="margin:1rem 0 0.8rem;">🎬 Movies (${actorMovies.length})</h4><div class="animated-grid" id="actor-movies-grid">${actorMovies.slice(0, showCount).map(createMovieCard).join('')}</div>`;
         if (actorMovies.length > showCount) {
-          actorHtml += `<button id="show-more-actor-movies" style="margin:1rem 0;background:var(--surface);border:1px solid var(--border-subtle);color:var(--text-primary);padding:0.5rem 1.2rem;border-radius:var(--radius-full);cursor:pointer;font-family:inherit;">Show More</button>`;
+          actorHtml += `<button id="show-more-actor-movies" style="margin:1rem 0;background:var(--surface);border:1px solid var(--border-subtle);color:var(--text-primary);padding:0.5rem 1.2rem;border-radius:var(--radius-full);cursor:pointer;font-family:inherit;">Show All ${actorMovies.length} Movies</button>`;
         }
       }
       if (actorSeries.length > 0) {
         const showCount = 8;
-        actorHtml += `<h4 style="margin:1rem 0 0.8rem;">📺 Series</h4><div class="animated-grid" id="actor-series-grid">${actorSeries.slice(0, showCount).map(createSeriesCard).join('')}</div>`;
+        actorHtml += `<h4 style="margin:1rem 0 0.8rem;">📺 Series (${actorSeries.length})</h4><div class="animated-grid" id="actor-series-grid">${actorSeries.slice(0, showCount).map(createSeriesCard).join('')}</div>`;
         if (actorSeries.length > showCount) {
-          actorHtml += `<button id="show-more-actor-series" style="margin:1rem 0;background:var(--surface);border:1px solid var(--border-subtle);color:var(--text-primary);padding:0.5rem 1.2rem;border-radius:var(--radius-full);cursor:pointer;font-family:inherit;">Show More</button>`;
+          actorHtml += `<button id="show-more-actor-series" style="margin:1rem 0;background:var(--surface);border:1px solid var(--border-subtle);color:var(--text-primary);padding:0.5rem 1.2rem;border-radius:var(--radius-full);cursor:pointer;font-family:inherit;">Show All ${actorSeries.length} Series</button>`;
         }
       }
       actorDiv.innerHTML = actorHtml;
+      // Bio expand handler
+      const bioExpandBtn = document.getElementById('actor-bio-expand');
+      if (bioExpandBtn && bio.length > 400) {
+        bioExpandBtn.onclick = function() {
+          document.getElementById('actor-bio-text').innerHTML = bio;
+        };
+      }
       // Show more handlers
       const showMoreMovies = document.getElementById('show-more-actor-movies');
       if (showMoreMovies) {
