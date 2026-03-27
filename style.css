@@ -1685,7 +1685,13 @@ footer {
 .navbar .search-form {
   position: relative;
 }
-/* Filter search input wrapper for dropdown positioning */
+
+/* Filter search input wrappers */
+#movie-filter-form,
+#series-filter-form {
+  position: relative;
+  z-index: 100;
+}
 #movie-filter-form > div:first-child,
 #series-filter-form > div:first-child {
   position: relative;

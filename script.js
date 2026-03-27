@@ -131,7 +131,7 @@ function initSearchAutocomplete(inputEl, options = {}) {
         dropdown.innerHTML = '<div class="search-dropdown-empty">No results found</div>';
         return;
       }
-      let html = results.map(item => {
+      let moviesHtml = results.map(item => {
         const title = item.title || item.name || '';
         const year = (item.release_date || item.first_air_date || '').slice(0, 4);
         const rating = item.vote_average ? item.vote_average.toFixed(1) : '';
@@ -150,9 +150,10 @@ function initSearchAutocomplete(inputEl, options = {}) {
           </div>
         </a>`;
       }).join('');
-      // Add actors section
+
+      let actorsHtml = '';
       if (actors.length > 0) {
-        html += actors.map(actor => {
+        actorsHtml = actors.map(actor => {
           const photo = actor.profile_path ? `https://image.tmdb.org/t/p/w92${actor.profile_path}` : '';
           const knownFor = (actor.known_for || []).slice(0, 2).map(k => k.title || k.name).filter(Boolean).join(', ');
           return `<a href="search.html?q=${encodeURIComponent(actor.name)}" class="search-dropdown-item">
@@ -167,7 +168,8 @@ function initSearchAutocomplete(inputEl, options = {}) {
           </a>`;
         }).join('');
       }
-      dropdown.innerHTML = html;
+      // Actors first, then movies/series
+      dropdown.innerHTML = actorsHtml + moviesHtml;
     } catch {
       dropdown.innerHTML = '<div class="search-dropdown-empty">Search failed</div>';
     }
