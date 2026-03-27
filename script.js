@@ -75,6 +75,122 @@ function createSkeletonGrid(count = 12) {
   return Array(count).fill('<div class="skeleton skeleton-card-grid"></div>').join('');
 }
 
+// --- Debounce Utility ---
+function debounce(fn, delay = 350) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
+// --- Live Search Autocomplete ---
+function initSearchAutocomplete(inputEl, options = {}) {
+  const type = options.type || 'multi'; // 'multi', 'movie', 'tv'
+  let dropdown = inputEl.parentElement.querySelector('.search-dropdown');
+  if (!dropdown) {
+    dropdown = document.createElement('div');
+    dropdown.className = 'search-dropdown';
+    inputEl.parentElement.appendChild(dropdown);
+  }
+
+  const fetchResults = debounce(async (query) => {
+    if (!query || query.length < 2) { dropdown.classList.remove('open'); return; }
+    dropdown.innerHTML = '<div class="search-dropdown-spinner"><div class="spinner"></div></div>';
+    dropdown.classList.add('open');
+    try {
+      let results = [];
+      if (type === 'multi') {
+        const [movieData, tvData] = await Promise.all([
+          fetchTMDB('/search/movie', { query, page: 1 }),
+          fetchTMDB('/search/tv', { query, page: 1 })
+        ]);
+        const movies = filterAdultContent(movieData.results || []).slice(0, 5).map(m => ({ ...m, media_type: 'movie' }));
+        const series = filterAdultContent(tvData.results || []).slice(0, 5).map(s => ({ ...s, media_type: 'tv' }));
+        results = [...movies, ...series];
+      } else if (type === 'movie') {
+        const data = await fetchTMDB('/search/movie', { query, page: 1 });
+        results = filterAdultContent(data.results || []).slice(0, 8).map(m => ({ ...m, media_type: 'movie' }));
+      } else {
+        const data = await fetchTMDB('/search/tv', { query, page: 1 });
+        results = filterAdultContent(data.results || []).slice(0, 8).map(s => ({ ...s, media_type: 'tv' }));
+      }
+      if (results.length === 0) {
+        dropdown.innerHTML = '<div class="search-dropdown-empty">No results found</div>';
+        return;
+      }
+      dropdown.innerHTML = results.map(item => {
+        const title = item.title || item.name || '';
+        const year = (item.release_date || item.first_air_date || '').slice(0, 4);
+        const rating = item.vote_average ? item.vote_average.toFixed(1) : '';
+        const poster = item.poster_path ? `https://image.tmdb.org/t/p/w92${item.poster_path}` : '';
+        const detailUrl = item.media_type === 'movie' ? `movie_detail.html?id=${item.id}` : `series_detail.html?id=${item.id}`;
+        const typeLabel = item.media_type === 'movie' ? 'Movie' : 'Series';
+        return `<a href="${detailUrl}" class="search-dropdown-item">
+          ${poster ? `<img src="${poster}" alt="${title}">` : '<div style="width:40px;height:60px;background:var(--surface);border-radius:var(--radius-sm);"></div>'}
+          <div class="sdi-info">
+            <div class="sdi-title">${title}</div>
+            <div class="sdi-meta">
+              <span class="sdi-type">${typeLabel}</span>
+              ${year ? `<span>${year}</span>` : ''}
+              ${rating ? `<span>⭐ ${rating}</span>` : ''}
+            </div>
+          </div>
+        </a>`;
+      }).join('');
+    } catch {
+      dropdown.innerHTML = '<div class="search-dropdown-empty">Search failed</div>';
+    }
+  }, 350);
+
+  inputEl.addEventListener('input', () => fetchResults(inputEl.value.trim()));
+  inputEl.addEventListener('focus', () => { if (inputEl.value.trim().length >= 2) fetchResults(inputEl.value.trim()); });
+  document.addEventListener('click', (e) => {
+    if (!inputEl.parentElement.contains(e.target)) dropdown.classList.remove('open');
+  });
+  inputEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') dropdown.classList.remove('open');
+  });
+}
+
+// --- Pagination Helper ---
+function renderPagination(containerId, currentPage, totalPages, onPageChange) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  totalPages = Math.min(totalPages, 500); // TMDb max
+  if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+  let html = '';
+  html += `<button class="page-arrow" ${currentPage <= 1 ? 'disabled' : ''} data-page="${currentPage - 1}">‹ Prev</button>`;
+
+  const maxVisible = 5;
+  let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+  let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+  if (endPage - startPage < maxVisible - 1) startPage = Math.max(1, endPage - maxVisible + 1);
+
+  if (startPage > 1) {
+    html += `<button data-page="1">1</button>`;
+    if (startPage > 2) html += `<span class="page-info">…</span>`;
+  }
+  for (let p = startPage; p <= endPage; p++) {
+    html += `<button data-page="${p}" class="${p === currentPage ? 'active' : ''}">${p}</button>`;
+  }
+  if (endPage < totalPages) {
+    if (endPage < totalPages - 1) html += `<span class="page-info">…</span>`;
+    html += `<button data-page="${totalPages}">${totalPages}</button>`;
+  }
+
+  html += `<button class="page-arrow" ${currentPage >= totalPages ? 'disabled' : ''} data-page="${currentPage + 1}">Next ›</button>`;
+
+  container.innerHTML = html;
+  container.querySelectorAll('button[data-page]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const page = parseInt(btn.dataset.page);
+      if (!isNaN(page)) onPageChange(page);
+    });
+  });
+}
+
 // --- Card Creation (Enhanced) ---
 function createMovieCard(movie) {
   const year = (movie.release_date || '').slice(0, 4);
@@ -244,42 +360,77 @@ if (document.getElementById('trending-row') && typeof TMDB_API_KEY !== 'undefine
 }
 
 // ============================================
-// Movies List Page
+// Movies List Page (with Pagination)
 // ============================================
 async function fetchGenres() {
   const data = await fetchTMDB('/genre/movie/list');
   return data.genres;
 }
 
-async function renderMoviesList(params = {}) {
+let moviesCurrentPage = 1;
+let moviesLastParams = {};
+let moviesTotalPages = 1;
+const ITEMS_PER_PAGE = 40; // 40 items per page (2 TMDb pages of 20)
+
+async function renderMoviesList(params = {}, page = 1) {
   const grid = document.getElementById('movies-grid');
   if (!grid) return;
-  grid.innerHTML = createSkeletonGrid(12);
+  grid.innerHTML = createSkeletonGrid(20);
+  moviesLastParams = params;
+  moviesCurrentPage = page;
+
   try {
-    let data;
+    // TMDb gives 20/page, fetch 2 pages for 40 items
+    const tmdbPage1 = (page * 2) - 1;
+    const tmdbPage2 = page * 2;
+    let results = [];
+    let totalPages = 1;
+
     if (params.query) {
-      data = await fetchTMDB('/search/movie', { query: params.query, page: 1 });
+      const [d1, d2] = await Promise.all([
+        fetchTMDB('/search/movie', { query: params.query, page: tmdbPage1 }),
+        fetchTMDB('/search/movie', { query: params.query, page: tmdbPage2 })
+      ]);
+      results = [...(d1.results || []), ...(d2.results || [])];
+      totalPages = Math.ceil((d1.total_results || 0) / ITEMS_PER_PAGE);
     } else {
-      const discoverParams = { sort_by: 'popularity.desc', page: 1 };
+      const discoverParams = { sort_by: 'popularity.desc' };
       if (params.year) discoverParams.primary_release_year = params.year;
       if (params.genre) discoverParams.with_genres = params.genre;
-      data = await fetchTMDB('/discover/movie', discoverParams);
+      const [d1, d2] = await Promise.all([
+        fetchTMDB('/discover/movie', { ...discoverParams, page: tmdbPage1 }),
+        fetchTMDB('/discover/movie', { ...discoverParams, page: tmdbPage2 })
+      ]);
+      results = [...(d1.results || []), ...(d2.results || [])];
+      totalPages = Math.ceil((d1.total_results || 0) / ITEMS_PER_PAGE);
     }
-    if (data.results && data.results.length > 0) {
-      let filtered = filterAdultContent(data.results);
-      if (params.genre === '10749') {
-        const romanceKeywords = ['erotic', 'sexy', 'seductive', 'tempting', 'forbidden', 'taboo', 'mature', 'adult', 'nude', 'nudity', 'sexual', 'intimate', 'passionate', 'steamy', 'stepmom', 'stepmother', 'provocative', 'suggestive'];
-        filtered = filtered.filter(m => {
-          const t = (m.title || '').toLowerCase();
-          const o = (m.overview || '').toLowerCase();
-          return !romanceKeywords.some(k => t.includes(k) || o.includes(k));
-        });
-      }
-      grid.innerHTML = filtered.slice(0, 20).map(createMovieCard).join('');
+
+    let filtered = filterAdultContent(results);
+    if (params.genre === '10749') {
+      const romanceKeywords = ['erotic', 'sexy', 'seductive', 'tempting', 'forbidden', 'taboo', 'mature', 'adult', 'nude', 'nudity', 'sexual', 'intimate', 'passionate', 'steamy', 'stepmom', 'stepmother', 'provocative', 'suggestive'];
+      filtered = filtered.filter(m => {
+        const t = (m.title || '').toLowerCase();
+        const o = (m.overview || '').toLowerCase();
+        return !romanceKeywords.some(k => t.includes(k) || o.includes(k));
+      });
+    }
+
+    // Deduplicate by id
+    const seen = new Set();
+    filtered = filtered.filter(m => { if (seen.has(m.id)) return false; seen.add(m.id); return true; });
+
+    if (filtered.length > 0) {
+      grid.innerHTML = filtered.slice(0, ITEMS_PER_PAGE).map(createMovieCard).join('');
       observeCards(grid);
     } else {
       grid.innerHTML = '<div style="color:var(--accent);padding:2rem;">No movies found.</div>';
     }
+
+    moviesTotalPages = totalPages;
+    renderPagination('movies-pagination', page, totalPages, (p) => {
+      renderMoviesList(moviesLastParams, p);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
   } catch (e) {
     grid.innerHTML = '<div style="color:var(--accent);padding:2rem;">Failed to load movies.</div>';
   }
@@ -304,45 +455,79 @@ if (document.getElementById('movies-grid')) {
   loadGenreMaps().then(() => {
     populateGenreDropdown();
     renderMoviesList();
+    // Autocomplete on movie filter search input
+    const movieQueryInput = document.getElementById('movie-query');
+    if (movieQueryInput) initSearchAutocomplete(movieQueryInput, { type: 'movie' });
   });
   document.getElementById('movie-filter-form').addEventListener('submit', function(e) {
     e.preventDefault();
     const query = document.getElementById('movie-query').value.trim();
     const genre = document.getElementById('genre-select').value;
     const year = document.getElementById('movie-year').value.trim();
-    renderMoviesList({ query, genre, year });
+    renderMoviesList({ query, genre, year }, 1);
   });
 }
 
 // ============================================
-// Series List Page
+// Series List Page (with Pagination)
 // ============================================
 async function fetchSeriesGenres() {
   const data = await fetchTMDB('/genre/tv/list');
   return data.genres;
 }
 
-async function renderSeriesList(params = {}) {
+let seriesCurrentPage = 1;
+let seriesLastParams = {};
+let seriesTotalPages = 1;
+
+async function renderSeriesList(params = {}, page = 1) {
   const grid = document.getElementById('series-grid');
   if (!grid) return;
-  grid.innerHTML = createSkeletonGrid(12);
+  grid.innerHTML = createSkeletonGrid(20);
+  seriesLastParams = params;
+  seriesCurrentPage = page;
+
   try {
-    let data;
+    const tmdbPage1 = (page * 2) - 1;
+    const tmdbPage2 = page * 2;
+    let results = [];
+    let totalPages = 1;
+
     if (params.query) {
-      data = await fetchTMDB('/search/tv', { query: params.query, page: 1 });
+      const [d1, d2] = await Promise.all([
+        fetchTMDB('/search/tv', { query: params.query, page: tmdbPage1 }),
+        fetchTMDB('/search/tv', { query: params.query, page: tmdbPage2 })
+      ]);
+      results = [...(d1.results || []), ...(d2.results || [])];
+      totalPages = Math.ceil((d1.total_results || 0) / ITEMS_PER_PAGE);
     } else {
-      const discoverParams = { sort_by: 'popularity.desc', page: 1 };
+      const discoverParams = { sort_by: 'popularity.desc' };
       if (params.year) discoverParams.first_air_date_year = params.year;
       if (params.genre) discoverParams.with_genres = params.genre;
-      data = await fetchTMDB('/discover/tv', discoverParams);
+      const [d1, d2] = await Promise.all([
+        fetchTMDB('/discover/tv', { ...discoverParams, page: tmdbPage1 }),
+        fetchTMDB('/discover/tv', { ...discoverParams, page: tmdbPage2 })
+      ]);
+      results = [...(d1.results || []), ...(d2.results || [])];
+      totalPages = Math.ceil((d1.total_results || 0) / ITEMS_PER_PAGE);
     }
-    if (data.results && data.results.length > 0) {
-      const filtered = filterAdultContent(data.results);
-      grid.innerHTML = filtered.slice(0, 20).map(createSeriesCard).join('');
+
+    let filtered = filterAdultContent(results);
+    const seen = new Set();
+    filtered = filtered.filter(s => { if (seen.has(s.id)) return false; seen.add(s.id); return true; });
+
+    if (filtered.length > 0) {
+      grid.innerHTML = filtered.slice(0, ITEMS_PER_PAGE).map(createSeriesCard).join('');
       observeCards(grid);
     } else {
       grid.innerHTML = '<div style="color:var(--accent);padding:2rem;">No series found.</div>';
     }
+
+    seriesTotalPages = totalPages;
+    renderPagination('series-pagination', page, totalPages, (p) => {
+      renderSeriesList(seriesLastParams, p);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
   } catch (e) {
     grid.innerHTML = '<div style="color:var(--accent);padding:2rem;">Failed to load series.</div>';
   }
@@ -367,13 +552,16 @@ if (document.getElementById('series-grid')) {
   loadGenreMaps().then(() => {
     populateSeriesGenreDropdown();
     renderSeriesList();
+    // Autocomplete on series filter search input
+    const seriesQueryInput = document.getElementById('series-query');
+    if (seriesQueryInput) initSearchAutocomplete(seriesQueryInput, { type: 'tv' });
   });
   document.getElementById('series-filter-form').addEventListener('submit', function(e) {
     e.preventDefault();
     const query = document.getElementById('series-query').value.trim();
     const genre = document.getElementById('series-genre-select').value;
     const year = document.getElementById('series-year').value.trim();
-    renderSeriesList({ query, genre, year });
+    renderSeriesList({ query, genre, year }, 1);
   });
 }
 
@@ -878,5 +1066,11 @@ document.addEventListener('DOMContentLoaded', () => {
     backToTop.addEventListener('click', () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
+  }
+
+  // Global navbar search autocomplete
+  const navbarSearchInput = document.querySelector('.navbar .search-form input[name="q"]');
+  if (navbarSearchInput) {
+    initSearchAutocomplete(navbarSearchInput, { type: 'multi' });
   }
 });
