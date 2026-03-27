@@ -40,12 +40,21 @@ let genreMapMovie = {};
 let genreMapTV = {};
 async function loadGenreMaps() {
   try {
+    const cachedM = localStorage.getItem('genreMapMovie');
+    const cachedT = localStorage.getItem('genreMapTV');
+    if (cachedM && cachedT) {
+      genreMapMovie = JSON.parse(cachedM);
+      genreMapTV = JSON.parse(cachedT);
+      return;
+    }
     const [movieGenres, tvGenres] = await Promise.all([
       fetchTMDB('/genre/movie/list'),
       fetchTMDB('/genre/tv/list')
     ]);
     (movieGenres.genres || []).forEach(g => genreMapMovie[g.id] = g.name);
     (tvGenres.genres || []).forEach(g => genreMapTV[g.id] = g.name);
+    localStorage.setItem('genreMapMovie', JSON.stringify(genreMapMovie));
+    localStorage.setItem('genreMapTV', JSON.stringify(genreMapTV));
   } catch (e) { /* silent */ }
 }
 
@@ -401,50 +410,63 @@ async function renderMoviesList(params = {}, page = 1) {
   moviesCurrentPage = page;
 
   try {
-    // TMDb gives 20/page, fetch 2 pages for 40 items
+    // TMDb gives 20/page. We fire BOTH requests immediately but process them one by one
+    // so the first 20 show up 2x faster.
     const tmdbPage1 = (page * 2) - 1;
     const tmdbPage2 = page * 2;
-    let results = [];
     let totalPages = 1;
+    const seen = new Set();
+    const isRomance = params.genre === '10749';
+    const romanceKeywords = ['erotic', 'sexy', 'seductive', 'tempting', 'forbidden', 'taboo', 'mature', 'adult', 'nude', 'nudity', 'sexual', 'intimate', 'passionate', 'steamy', 'stepmom', 'stepmother', 'provocative', 'suggestive'];
 
+    let p1, p2;
     if (params.query) {
-      const [d1, d2] = await Promise.all([
-        fetchTMDB('/search/movie', { query: params.query, page: tmdbPage1 }),
-        fetchTMDB('/search/movie', { query: params.query, page: tmdbPage2 })
-      ]);
-      results = [...(d1.results || []), ...(d2.results || [])];
-      totalPages = Math.ceil((d1.total_results || 0) / ITEMS_PER_PAGE);
+      p1 = fetchTMDB('/search/movie', { query: params.query, page: tmdbPage1 });
+      p2 = fetchTMDB('/search/movie', { query: params.query, page: tmdbPage2 });
     } else {
       const discoverParams = { sort_by: 'popularity.desc' };
       if (params.year) discoverParams.primary_release_year = params.year;
       if (params.genre) discoverParams.with_genres = params.genre;
-      const [d1, d2] = await Promise.all([
-        fetchTMDB('/discover/movie', { ...discoverParams, page: tmdbPage1 }),
-        fetchTMDB('/discover/movie', { ...discoverParams, page: tmdbPage2 })
-      ]);
-      results = [...(d1.results || []), ...(d2.results || [])];
-      totalPages = Math.ceil((d1.total_results || 0) / ITEMS_PER_PAGE);
+      p1 = fetchTMDB('/discover/movie', { ...discoverParams, page: tmdbPage1 });
+      p2 = fetchTMDB('/discover/movie', { ...discoverParams, page: tmdbPage2 });
     }
 
-    let filtered = filterAdultContent(results);
-    if (params.genre === '10749') {
-      const romanceKeywords = ['erotic', 'sexy', 'seductive', 'tempting', 'forbidden', 'taboo', 'mature', 'adult', 'nude', 'nudity', 'sexual', 'intimate', 'passionate', 'steamy', 'stepmom', 'stepmother', 'provocative', 'suggestive'];
-      filtered = filtered.filter(m => {
-        const t = (m.title || '').toLowerCase();
-        const o = (m.overview || '').toLowerCase();
-        return !romanceKeywords.some(k => t.includes(k) || o.includes(k));
-      });
-    }
+    // Helper to filter and dedup
+    const processResults = (data) => {
+      let filtered = filterAdultContent(data.results || []);
+      if (isRomance) {
+        filtered = filtered.filter(m => {
+          const t = (m.title || '').toLowerCase();
+          const o = (m.overview || '').toLowerCase();
+          return !romanceKeywords.some(k => t.includes(k) || o.includes(k));
+        });
+      }
+      return filtered.filter(m => { if (seen.has(m.id)) return false; seen.add(m.id); return true; });
+    };
 
-    // Deduplicate by id
-    const seen = new Set();
-    filtered = filtered.filter(m => { if (seen.has(m.id)) return false; seen.add(m.id); return true; });
+    // Await Page 1 First
+    const d1 = await p1;
+    totalPages = Math.ceil((d1.total_results || 0) / ITEMS_PER_PAGE);
+    const results1 = processResults(d1);
 
-    if (filtered.length > 0) {
-      grid.innerHTML = filtered.slice(0, ITEMS_PER_PAGE).map(createMovieCard).join('');
+    if (results1.length > 0) {
+      grid.innerHTML = results1.map(createMovieCard).join('');
       observeCards(grid);
     } else {
       grid.innerHTML = '<div style="color:var(--accent);padding:2rem;">No movies found.</div>';
+    }
+
+    // Await Page 2 in Background and Append
+    const d2 = await p2;
+    const results2 = processResults(d2);
+    
+    if (results2.length > 0) {
+      if (results1.length === 0) {
+        grid.innerHTML = results2.map(createMovieCard).join('');
+      } else {
+        grid.insertAdjacentHTML('beforeend', results2.map(createMovieCard).join(''));
+      }
+      observeCards(grid);
     }
 
     moviesTotalPages = totalPages;
@@ -511,37 +533,49 @@ async function renderSeriesList(params = {}, page = 1) {
   try {
     const tmdbPage1 = (page * 2) - 1;
     const tmdbPage2 = page * 2;
-    let results = [];
     let totalPages = 1;
+    const seen = new Set();
+    let p1, p2;
 
     if (params.query) {
-      const [d1, d2] = await Promise.all([
-        fetchTMDB('/search/tv', { query: params.query, page: tmdbPage1 }),
-        fetchTMDB('/search/tv', { query: params.query, page: tmdbPage2 })
-      ]);
-      results = [...(d1.results || []), ...(d2.results || [])];
-      totalPages = Math.ceil((d1.total_results || 0) / ITEMS_PER_PAGE);
+      p1 = fetchTMDB('/search/tv', { query: params.query, page: tmdbPage1 });
+      p2 = fetchTMDB('/search/tv', { query: params.query, page: tmdbPage2 });
     } else {
       const discoverParams = { sort_by: 'popularity.desc' };
       if (params.year) discoverParams.first_air_date_year = params.year;
       if (params.genre) discoverParams.with_genres = params.genre;
-      const [d1, d2] = await Promise.all([
-        fetchTMDB('/discover/tv', { ...discoverParams, page: tmdbPage1 }),
-        fetchTMDB('/discover/tv', { ...discoverParams, page: tmdbPage2 })
-      ]);
-      results = [...(d1.results || []), ...(d2.results || [])];
-      totalPages = Math.ceil((d1.total_results || 0) / ITEMS_PER_PAGE);
+      p1 = fetchTMDB('/discover/tv', { ...discoverParams, page: tmdbPage1 });
+      p2 = fetchTMDB('/discover/tv', { ...discoverParams, page: tmdbPage2 });
     }
 
-    let filtered = filterAdultContent(results);
-    const seen = new Set();
-    filtered = filtered.filter(s => { if (seen.has(s.id)) return false; seen.add(s.id); return true; });
+    const processResults = (data) => {
+      let filtered = filterAdultContent(data.results || []);
+      return filtered.filter(s => { if (seen.has(s.id)) return false; seen.add(s.id); return true; });
+    };
 
-    if (filtered.length > 0) {
-      grid.innerHTML = filtered.slice(0, ITEMS_PER_PAGE).map(createSeriesCard).join('');
+    // Await Page 1 First
+    const d1 = await p1;
+    totalPages = Math.ceil((d1.total_results || 0) / ITEMS_PER_PAGE);
+    const results1 = processResults(d1);
+
+    if (results1.length > 0) {
+      grid.innerHTML = results1.map(createSeriesCard).join('');
       observeCards(grid);
     } else {
       grid.innerHTML = '<div style="color:var(--accent);padding:2rem;">No series found.</div>';
+    }
+
+    // Await Page 2 in Background and Append
+    const d2 = await p2;
+    const results2 = processResults(d2);
+
+    if (results2.length > 0) {
+      if (results1.length === 0) {
+        grid.innerHTML = results2.map(createSeriesCard).join('');
+      } else {
+        grid.insertAdjacentHTML('beforeend', results2.map(createSeriesCard).join(''));
+      }
+      observeCards(grid);
     }
 
     seriesTotalPages = totalPages;
