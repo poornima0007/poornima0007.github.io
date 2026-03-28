@@ -706,10 +706,11 @@ async function renderMovieDetail() {
       <h4>🎭 Cast</h4>
       <div class="movie-cast-list">
         ${cast.map(actor => `
-          <div class="movie-cast-card">
-            ${actor.profile_path ? `<img src="https://image.tmdb.org/t/p/w185${actor.profile_path}" alt="${actor.name}">` : '<div style="width:64px;height:64px;border-radius:50%;background:var(--surface);"></div>'}
+          <a href="search.html?q=${encodeURIComponent(actor.name)}" class="movie-cast-card">
+            ${actor.profile_path ? `<img src="https://image.tmdb.org/t/p/w185${actor.profile_path}" alt="${actor.name}">` : '<div style="width:64px;height:64px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;">🎭</div>'}
             <div class="cast-name">${actor.name}</div>
-          </div>
+            <div class="cast-character">${actor.character || ''}</div>
+          </a>
         `).join('')}
       </div>
     `;
@@ -874,10 +875,11 @@ async function renderSeriesDetail() {
       <h4>🎭 Cast</h4>
       <div class="series-cast-list">
         ${cast.map(actor => `
-          <div class="series-cast-card">
-            ${actor.profile_path ? `<img src="https://image.tmdb.org/t/p/w185${actor.profile_path}" alt="${actor.name}">` : '<div style="width:64px;height:64px;border-radius:50%;background:var(--surface);"></div>'}
+          <a href="search.html?q=${encodeURIComponent(actor.name)}" class="series-cast-card">
+            ${actor.profile_path ? `<img src="https://image.tmdb.org/t/p/w185${actor.profile_path}" alt="${actor.name}">` : '<div style="width:64px;height:64px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;">🎭</div>'}
             <div class="cast-name">${actor.name}</div>
-          </div>
+            <div class="cast-character">${actor.character || ''}</div>
+          </a>
         `).join('')}
       </div>
     `;
