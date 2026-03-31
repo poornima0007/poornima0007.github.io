@@ -287,25 +287,27 @@ async function syncFromSheets(listType = 'watched') {
       range: `${config.title}!A2:E`
     });
     const rows = res.result.values;
+    // Always map the rows, defaulting to an empty array if none found
     const items = rows ? rows.map(r => ({ 
       id: String(r[0]), 
-      type: String(r[1]).toLowerCase() === 'movie' ? 'movie' : 'tv', 
-      title: r[2], 
-      poster_path: r[3] 
+      type: String(r[1] || 'movie').toLowerCase() === 'movie' ? 'movie' : 'tv', 
+      title: r[2] || 'Untitled', 
+      poster_path: r[3] || ''
     })) : [];
     
-    // Compare with current local storage to avoid unnecessary UI redraws
     const current = getStorage(listType) || [];
+    // Only update if data has actually changed to prevent flickering
     if (JSON.stringify(items) !== JSON.stringify(current)) {
       setStorage(listType, items);
-      // Trigger a silent UI update if we're on the relevant page
       if (listType === 'watched' && document.getElementById('watched-movies-grid')) {
         renderProfilePage();
       } else if (listType === 'wishlist' && document.getElementById('wishlist-movies-grid')) {
         renderWishlistPage();
       }
     }
-  } catch (e) { console.error(`Sheet read failed (${listType})`, e); }
+  } catch (e) {
+    console.error(`Sheet sync failed (${listType}):`, e);
+  }
 }
 
 // Call init on load
@@ -1535,22 +1537,26 @@ function renderProfilePage() {
   
   if (!watchedMoviesGrid && !watchedSeriesGrid) return;
 
-  const watched = getStorage('watched') || [];
-  const watchedMovies = watched.filter(item => item.type === 'movie');
-  const watchedSeries = watched.filter(item => item.type === 'tv' || item.type === 'series');
+  try {
+    const watched = getStorage('watched') || [];
+    const watchedMovies = watched.filter(item => item.type === 'movie');
+    const watchedSeries = watched.filter(item => item.type === 'tv' || item.type === 'series');
 
-  const renderGrid = (grid, items, cardFn, emptyMsg) => {
-    if (!grid) return;
-    if (items && items.length > 0) {
-      grid.innerHTML = items.map(cardFn).join('');
-      observeCards(grid);
-    } else {
-      grid.innerHTML = `<div class="profile-empty">${emptyMsg}</div>`;
-    }
-  };
+    const renderGrid = (grid, items, cardFn, emptyMsg) => {
+      if (!grid) return;
+      if (items && items.length > 0) {
+        grid.innerHTML = items.map(cardFn).join('');
+        observeCards(grid);
+      } else {
+        grid.innerHTML = `<div class="profile-empty">${emptyMsg}</div>`;
+      }
+    };
 
-  renderGrid(watchedMoviesGrid, watchedMovies, createMovieCard, "You haven't watched any movies yet.");
-  renderGrid(watchedSeriesGrid, watchedSeries, createSeriesCard, "You haven't watched any series yet.");
+    renderGrid(watchedMoviesGrid, watchedMovies, createMovieCard, "You haven't watched any movies yet.");
+    renderGrid(watchedSeriesGrid, watchedSeries, createSeriesCard, "You haven't watched any series yet.");
+  } catch (err) {
+    console.error("Profile render failed", err);
+  }
 }
 
 function renderWishlistPage() {
@@ -1559,22 +1565,26 @@ function renderWishlistPage() {
   
   if (!wishlistMoviesGrid && !wishlistSeriesGrid) return;
 
-  const wishlist = getStorage('wishlist') || [];
-  const wishlistMovies = wishlist.filter(item => item.type === 'movie');
-  const wishlistSeries = wishlist.filter(item => item.type === 'tv' || item.type === 'series');
+  try {
+    const wishlist = getStorage('wishlist') || [];
+    const wishlistMovies = wishlist.filter(item => item.type === 'movie');
+    const wishlistSeries = wishlist.filter(item => item.type === 'tv' || item.type === 'series');
 
-  const renderGrid = (grid, items, cardFn, emptyMsg) => {
-    if (!grid) return;
-    if (items && items.length > 0) {
-      grid.innerHTML = items.map(cardFn).join('');
-      observeCards(grid);
-    } else {
-      grid.innerHTML = `<div class="profile-empty">${emptyMsg}</div>`;
-    }
-  };
+    const renderGrid = (grid, items, cardFn, emptyMsg) => {
+      if (!grid) return;
+      if (items && items.length > 0) {
+        grid.innerHTML = items.map(cardFn).join('');
+        observeCards(grid);
+      } else {
+        grid.innerHTML = `<div class="profile-empty">${emptyMsg}</div>`;
+      }
+    };
 
-  renderGrid(wishlistMoviesGrid, wishlistMovies, createMovieCard, 'Your movie wishlist is empty. Start adding!');
-  renderGrid(wishlistSeriesGrid, wishlistSeries, createSeriesCard, 'Your series wishlist is empty. Start adding!');
+    renderGrid(wishlistMoviesGrid, wishlistMovies, createMovieCard, 'Your movie wishlist is empty. Start adding!');
+    renderGrid(wishlistSeriesGrid, wishlistSeries, createSeriesCard, 'Your series wishlist is empty. Start adding!');
+  } catch (err) {
+    console.error("Wishlist render failed", err);
+  }
 }
 
 // --- Instant Page Loading (Render from cache first) ---
