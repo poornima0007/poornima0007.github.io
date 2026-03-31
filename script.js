@@ -148,50 +148,62 @@ function updateNavbarAuth() {
 // Spreadsheet DB Logic
 async function findOrCreateSpreadsheet() {
   try {
-    const response = await gapi.client.drive.files.list({
+    const listRes = await gapi.client.drive.files.list({
       q: "name = 'Poflix_Watched_Data' and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false",
       fields: 'files(id, name)',
     });
-    const files = response.result.files;
+    const files = listRes.result.files;
     if (files && files.length > 0) {
       spreadsheetId = files[0].id;
     } else {
       const createRes = await gapi.client.sheets.spreadsheets.create({
         resource: { properties: { title: 'Poflix_Watched_Data' } },
-        fields: 'spreadsheetId',
+        fields: 'spreadsheetId,sheets(properties(sheetId,title))',
       });
       spreadsheetId = createRes.result.spreadsheetId;
       // Add Headers
       await gapi.client.sheets.spreadsheets.values.update({
         spreadsheetId: spreadsheetId,
-        range: 'Sheet1!A1:E1',
+        range: 'A1:E1',
         valueInputOption: 'RAW',
         resource: { values: [['ID', 'Category', 'Title', 'Poster', 'Timestamp']] }
       });
     }
+    
+    // Fetch current sheet properties to avoid hardcoded 'Sheet1' or '0'
+    const ssMeta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId: spreadsheetId });
+    const firstSheet = ssMeta.result.sheets[0].properties;
     localStorage.setItem('poflix_spreadsheet_id', spreadsheetId);
+    localStorage.setItem('poflix_sheet_title', firstSheet.title);
+    localStorage.setItem('poflix_sheet_id', firstSheet.sheetId);
   } catch (e) { console.error("Sheets discovery failed", e); }
 }
 
+function getSheetConfig() {
+  return {
+    id: localStorage.getItem('poflix_spreadsheet_id'),
+    title: localStorage.getItem('poflix_sheet_title') || 'Sheet1',
+    gid: localStorage.getItem('poflix_sheet_id') || 0
+  };
+}
+
 async function syncToSheets(item) {
-  if (!googleUser || !spreadsheetId) return;
+  const config = getSheetConfig();
+  if (!googleUser || !config.id) return;
   try {
-    // 1. Check for duplicates first
+    // 1. Check for duplicates (even partial sheet scans)
     const getRes = await gapi.client.sheets.spreadsheets.values.get({
-      spreadsheetId: spreadsheetId,
-      range: 'Sheet1!A2:A'
+      spreadsheetId: config.id,
+      range: `${config.title}!A:A`
     });
     const ids = getRes.result.values ? getRes.result.values.map(r => String(r[0])) : [];
-    if (ids.includes(String(item.id))) {
-      console.log("Item already in Sheets, skipping append.");
-      return;
-    }
+    if (ids.includes(String(item.id))) return;
 
     // 2. Append if not found
     const category = item.type === 'movie' ? 'Movie' : 'Series';
     await gapi.client.sheets.spreadsheets.values.append({
-      spreadsheetId: spreadsheetId,
-      range: 'Sheet1!A2',
+      spreadsheetId: config.id,
+      range: `${config.title}!A2`,
       valueInputOption: 'RAW',
       resource: { values: [[item.id, category, item.title, item.poster_path, new Date().toISOString()]] }
     });
@@ -199,50 +211,51 @@ async function syncToSheets(item) {
 }
 
 async function removeFromSheets(id) {
-  if (!googleUser || !spreadsheetId) return;
+  const config = getSheetConfig();
+  if (!googleUser || !config.id) return;
   try {
-    // 1. Find the row index
+    // 1. Find all matching row indices (to handle existing duplicates)
     const getRes = await gapi.client.sheets.spreadsheets.values.get({
-      spreadsheetId: spreadsheetId,
-      range: 'Sheet1!A:A'
+      spreadsheetId: config.id,
+      range: `${config.title}!A:A`
     });
     const rows = getRes.result.values;
     if (!rows) return;
 
-    const rowIndex = rows.findIndex(r => String(r[0]) === String(id));
-    if (rowIndex === -1) {
-      console.log("Item not found in Sheets, nothing to remove.");
-      return;
-    }
-
-    // 2. Delete the row (rowIndex is 0-indexed, Sheets rows are 1-indexed)
-    await gapi.client.sheets.spreadsheets.batchUpdate({
-      spreadsheetId: spreadsheetId,
-      resource: {
-        requests: [
-          {
-            deleteDimension: {
-              range: {
-                sheetId: 0, // Assuming first sheet
-                dimension: 'ROWS',
-                startIndex: rowIndex,
-                endIndex: rowIndex + 1
-              }
+    const requests = [];
+    // Search from bottom to top to preserve indices during deletion sequence
+    for (let i = rows.length - 1; i >= 0; i--) {
+      if (String(rows[i][0]) === String(id)) {
+        requests.push({
+          deleteDimension: {
+            range: {
+              sheetId: config.gid,
+              dimension: 'ROWS',
+              startIndex: i,
+              endIndex: i + 1
             }
           }
-        ]
+        });
       }
+    }
+
+    if (requests.length === 0) return;
+
+    // 2. Batch Delete all instances
+    await gapi.client.sheets.spreadsheets.batchUpdate({
+      spreadsheetId: config.id,
+      resource: { requests }
     });
-    console.log(`Deleted row ${rowIndex + 1} from Sheets.`);
-  } catch (e) { console.error("Sheet removal failed", e); }
+    } catch (e) { console.error("Sheet removal failed", e); }
 }
 
 async function syncFromSheets() {
-  if (!googleUser || !spreadsheetId) return;
+  const config = getSheetConfig();
+  if (!googleUser || !config.id) return;
   try {
     const res = await gapi.client.sheets.spreadsheets.values.get({
-      spreadsheetId: spreadsheetId,
-      range: 'Sheet1!A2:E'
+      spreadsheetId: config.id,
+      range: `${config.title}!A2:E`
     });
     const rows = res.result.values;
     if (rows) {
