@@ -47,6 +47,14 @@
         <input type="number" name="year" id="series-year" placeholder="Year" aria-label="Filter by year">
       </div>
       <div>
+        <select name="sort" id="series-sort" aria-label="Sort by">
+          <option value="popularity.desc">Popularity</option>
+          <option value="vote_average.desc">Rating</option>
+          <option value="first_air_date.desc">Newest</option>
+          <option value="first_air_date.asc">Oldest</option>
+        </select>
+      </div>
+      <div>
         <button type="submit" class="btn" aria-label="Apply filters">🎬 Filter</button>
       </div>
     </form>

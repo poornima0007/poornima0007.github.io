@@ -912,7 +912,9 @@ async function renderMoviesList(params = {}, page = 1) {
       p1 = fetchTMDB('/search/movie', { query: params.query, page: tmdbPage1 });
       p2 = fetchTMDB('/search/movie', { query: params.query, page: tmdbPage2 });
     } else {
-      const discoverParams = { sort_by: 'popularity.desc' };
+      const discoverParams = { 
+        sort_by: params.sort || 'popularity.desc' 
+      };
       if (params.year) discoverParams.primary_release_year = params.year;
       if (params.genre) discoverParams.with_genres = params.genre;
       p1 = fetchTMDB('/discover/movie', { ...discoverParams, page: tmdbPage1 });
@@ -984,7 +986,8 @@ if (document.getElementById('movies-grid')) {
     const query = document.getElementById('movie-query').value.trim();
     const genre = document.getElementById('genre-select').value;
     const year = document.getElementById('movie-year').value.trim();
-    renderMoviesList({ query, genre, year }, 1);
+    const sort = document.getElementById('movie-sort').value;
+    renderMoviesList({ query, genre, year, sort }, 1);
   });
 }
 
@@ -1018,7 +1021,9 @@ async function renderSeriesList(params = {}, page = 1) {
       p1 = fetchTMDB('/search/tv', { query: params.query, page: tmdbPage1 });
       p2 = fetchTMDB('/search/tv', { query: params.query, page: tmdbPage2 });
     } else {
-      const discoverParams = { sort_by: 'popularity.desc' };
+      const discoverParams = { 
+        sort_by: params.sort || 'popularity.desc' 
+      };
       if (params.year) discoverParams.first_air_date_year = params.year;
       if (params.genre) discoverParams.with_genres = params.genre;
       p1 = fetchTMDB('/discover/tv', { ...discoverParams, page: tmdbPage1 });
@@ -1082,7 +1087,8 @@ if (document.getElementById('series-grid')) {
     const query = document.getElementById('series-query').value.trim();
     const genre = document.getElementById('series-genre-select').value;
     const year = document.getElementById('series-year').value.trim();
-    renderSeriesList({ query, genre, year }, 1);
+    const sort = document.getElementById('series-sort').value;
+    renderSeriesList({ query, genre, year, sort }, 1);
   });
 }
 
