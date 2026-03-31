@@ -1,6 +1,178 @@
 // ============================================
-// Poflix — Enhanced Script
+// Poflix — Enhanced Script (with Google Sheets DB)
 // ============================================
+
+// --- Google API Initialization ---
+let tokenClient;
+let gapiInited = false;
+let gisInited = false;
+let googleUser = null;
+let spreadsheetId = localStorage.getItem('poflix_spreadsheet_id');
+
+// Setup Google APIs
+function initGoogleAuth() {
+  const scriptGapi = document.createElement('script');
+  scriptGapi.src = "https://apis.google.com/js/api.js";
+  scriptGapi.onload = () => gapi.load('client', initializeGapiClient);
+  document.head.appendChild(scriptGapi);
+
+  const scriptGis = document.createElement('script');
+  scriptGis.src = "https://accounts.google.com/gsi/client";
+  scriptGis.onload = initializeGisClient;
+  document.head.appendChild(scriptGis);
+}
+
+async function initializeGapiClient() {
+  await gapi.client.init({
+    apiKey: GOOGLE_API_KEY,
+    discoveryDocs: DISCOVERY_DOCS,
+  });
+  gapiInited = true;
+  maybeStartAuth();
+}
+
+function initializeGisClient() {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: SCOPES,
+    callback: (tokenResponse) => {
+      if (tokenResponse.access_token) {
+        localStorage.setItem('poflix_auth_token', tokenResponse.access_token);
+        localStorage.setItem('poflix_auth_expires', Date.now() + (tokenResponse.expires_in * 1000));
+        gapi.client.setToken(tokenResponse);
+        checkUserStatus();
+      }
+    },
+  });
+  gisInited = true;
+  maybeStartAuth();
+}
+
+function maybeStartAuth() {
+  if (gapiInited && gisInited) {
+    const savedToken = localStorage.getItem('poflix_auth_token');
+    const expires = localStorage.getItem('poflix_auth_expires');
+    
+    // Check if token exists and isn't expired
+    if (savedToken && expires && Date.now() < parseInt(expires)) {
+      gapi.client.setToken({ access_token: savedToken });
+      checkUserStatus();
+    } else {
+      // If we just came from the login page, request a fresh token
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('setup') === 'true') {
+        tokenClient.requestAccessToken();
+      } else {
+        updateNavbarAuth();
+      }
+    }
+  }
+}
+
+async function checkUserStatus() {
+  try {
+    const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${gapi.client.getToken().access_token}` }
+    }).then(res => res.json());
+    
+    if (userInfo && userInfo.sub) {
+      googleUser = userInfo;
+      localStorage.setItem('poflix_user_info', JSON.stringify(userInfo));
+      updateNavbarAuth();
+      if (!spreadsheetId) await findOrCreateSpreadsheet();
+      await syncFromSheets();
+    }
+  } catch (e) {
+    console.error("Auth check failed", e);
+    logout();
+  }
+}
+
+function logout() {
+  localStorage.removeItem('poflix_auth_token');
+  localStorage.removeItem('poflix_user_info');
+  localStorage.removeItem('poflix_spreadsheet_id');
+  googleUser = null;
+  spreadsheetId = null;
+  updateNavbarAuth();
+  window.location.reload();
+}
+
+function updateNavbarAuth() {
+  const navContainer = document.getElementById('navbar-nav');
+  if (!navContainer) return;
+  
+  let authLink = navContainer.querySelector('.auth-link');
+  if (!authLink) {
+    authLink = document.createElement('li');
+    authLink.className = 'auth-link';
+    navContainer.appendChild(authLink);
+  }
+
+  if (googleUser) {
+    authLink.innerHTML = `<a href="profile.html" class="nav-user"><img src="${googleUser.picture}" alt="User" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:8px;">Profile</a>`;
+  } else {
+    authLink.innerHTML = `<a href="login.html" class="btn-login-nav">Login</a>`;
+  }
+}
+
+// Spreadsheet DB Logic
+async function findOrCreateSpreadsheet() {
+  try {
+    const response = await gapi.client.drive.files.list({
+      q: "name = 'Poflix_Watched_Data' and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false",
+      fields: 'files(id, name)',
+    });
+    const files = response.result.files;
+    if (files && files.length > 0) {
+      spreadsheetId = files[0].id;
+    } else {
+      const createRes = await gapi.client.sheets.spreadsheets.create({
+        resource: { properties: { title: 'Poflix_Watched_Data' } },
+        fields: 'spreadsheetId',
+      });
+      spreadsheetId = createRes.result.spreadsheetId;
+      // Add Headers
+      await gapi.client.sheets.spreadsheets.values.update({
+        spreadsheetId: spreadsheetId,
+        range: 'Sheet1!A1:E1',
+        valueInputOption: 'RAW',
+        resource: { values: [['ID', 'Type', 'Title', 'Poster', 'Timestamp']] }
+      });
+    }
+    localStorage.setItem('poflix_spreadsheet_id', spreadsheetId);
+  } catch (e) { console.error("Sheets discovery failed", e); }
+}
+
+async function syncToSheets(item) {
+  if (!googleUser || !spreadsheetId) return;
+  try {
+    await gapi.client.sheets.spreadsheets.values.append({
+      spreadsheetId: spreadsheetId,
+      range: 'Sheet1!A2',
+      valueInputOption: 'RAW',
+      resource: { values: [[item.id, item.type, item.title, item.poster_path, new Date().toISOString()]] }
+    });
+  } catch (e) { console.error("Sheet append failed", e); }
+}
+
+async function syncFromSheets() {
+  if (!googleUser || !spreadsheetId) return;
+  try {
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId: spreadsheetId,
+      range: 'Sheet1!A2:E'
+    });
+    const rows = res.result.values;
+    if (rows) {
+      const watched = rows.map(r => ({ id: r[0], type: r[1], title: r[2], poster_path: r[3] }));
+      localStorage.setItem('watched', JSON.stringify(watched));
+    }
+  } catch (e) { console.error("Sheet read failed", e); }
+}
+
+// Call init on load
+initGoogleAuth();
 
 // --- Adult Content Filter ---
 function filterAdultContent(items) {
@@ -70,10 +242,35 @@ function isInStorage(key, id) {
 }
 function toggleStorage(key, item) {
   let arr = getStorage(key);
-  const idx = arr.findIndex(i => i.id === item.id);
+  const idx = arr.findIndex(i => String(i.id) === String(item.id));
   if (idx >= 0) { arr.splice(idx, 1); } else { arr.push(item); }
   setStorage(key, arr);
   return idx < 0; // returns true if added
+}
+
+function getWatchedFromStorage() {
+  return getStorage('watched');
+}
+
+function isWatched(id) {
+  return getWatchedFromStorage().some(item => String(item.id) === String(id));
+}
+
+async function toggleWatched(item, btn) {
+  let watched = getWatchedFromStorage();
+  const idx = watched.findIndex(i => String(i.id) === String(item.id));
+  
+  if (idx >= 0) {
+    watched.splice(idx, 1);
+    btn.classList.remove('active');
+  } else {
+    watched.push(item);
+    btn.classList.add('active');
+    if (googleUser && spreadsheetId) {
+      await syncToSheets(item);
+    }
+  }
+  setStorage('watched', watched);
 }
 
 // --- Skeleton Loaders ---
@@ -232,7 +429,11 @@ function createMovieCard(movie) {
     ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
     : '';
   if (!posterUrl) return '';
+  const watchedClass = isWatched(movie.id) ? ' active' : '';
   return `<a href="movie_detail.html?id=${movie.id}" class="animated-card" data-id="${movie.id}">
+    <button class="btn-watched${watchedClass}" onclick="event.preventDefault(); toggleWatched({id:'${movie.id}', title:'${(movie.title||'').replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
+      <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+    </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
     ${rating ? `<span class="card-rating">⭐ ${rating}</span>` : ''}
     <img src="${posterUrl}" alt="${movie.title}" loading="lazy">
@@ -247,7 +448,11 @@ function createSeriesCard(series) {
     ? `https://image.tmdb.org/t/p/w342${series.poster_path}`
     : '';
   if (!posterUrl) return '';
+  const watchedClass = isWatched(series.id) ? ' active' : '';
   return `<a href="series_detail.html?id=${series.id}" class="animated-card" data-id="${series.id}">
+    <button class="btn-watched${watchedClass}" onclick="event.preventDefault(); toggleWatched({id:'${series.id}', title:'${(series.name||'').replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
+      <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+    </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
     ${rating ? `<span class="card-rating">⭐ ${rating}</span>` : ''}
     <img src="${posterUrl}" alt="${series.name}" loading="lazy">
@@ -262,7 +467,11 @@ function createCarouselMovieCard(movie) {
     ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
     : '';
   if (!posterUrl) return '';
+  const watchedClass = isWatched(movie.id) ? ' active' : '';
   return `<a href="movie_detail.html?id=${movie.id}" class="carousel-card" data-id="${movie.id}">
+    <button class="btn-watched${watchedClass}" onclick="event.preventDefault(); toggleWatched({id:'${movie.id}', title:'${(movie.title||'').replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
+      <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+    </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
     ${rating ? `<span class="card-rating">⭐ ${rating}</span>` : ''}
     <img src="${posterUrl}" alt="${movie.title}" loading="lazy">
@@ -277,7 +486,11 @@ function createCarouselSeriesCard(series) {
     ? `https://image.tmdb.org/t/p/w342${series.poster_path}`
     : '';
   if (!posterUrl) return '';
+  const watchedClass = isWatched(series.id) ? ' active' : '';
   return `<a href="series_detail.html?id=${series.id}" class="carousel-card" data-id="${series.id}">
+    <button class="btn-watched${watchedClass}" onclick="event.preventDefault(); toggleWatched({id:'${series.id}', title:'${(series.name||'').replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
+      <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+    </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
     ${rating ? `<span class="card-rating">⭐ ${rating}</span>` : ''}
     <img src="${posterUrl}" alt="${series.name}" loading="lazy">

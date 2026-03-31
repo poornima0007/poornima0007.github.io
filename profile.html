@@ -32,26 +32,28 @@
   </nav>
 
   <main id="main-content">
-    <h2>Your Profile</h2>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;">
+      <h2>Your Profile</h2>
+      <button onclick="logout()" class="btn-login-nav" style="background:var(--surface);border:1px solid var(--border-subtle);">Logout from Google</button>
+    </div>
+
     <div class="profile-section">
+      <h4 style="color:var(--accent);display:flex;align-items:center;gap:0.5rem;">
+        <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+        Watched History (Saved to Sheets)
+      </h4>
+      <div class="profile-grid" id="watched-grid">
+        <div class="profile-empty">Loading your history from Google Sheets...</div>
+      </div>
+
       <h4>❤️ Favorite Movies</h4>
       <div class="profile-grid" id="fav-movies-grid">
-        <div class="profile-empty">No favorite movies yet. Browse and add some!</div>
+        <div class="profile-empty">No favorite movies yet.</div>
       </div>
 
       <h4>📺 Favorite Series</h4>
       <div class="profile-grid" id="fav-series-grid">
-        <div class="profile-empty">No favorite series yet. Browse and add some!</div>
-      </div>
-
-      <h4>🔖 Watchlist Movies</h4>
-      <div class="profile-grid" id="watchlist-movies-grid">
-        <div class="profile-empty">Your movie watchlist is empty. Start adding!</div>
-      </div>
-
-      <h4>📋 Watchlist Series</h4>
-      <div class="profile-grid" id="watchlist-series-grid">
-        <div class="profile-empty">Your series watchlist is empty. Start adding!</div>
+        <div class="profile-empty">No favorite series yet.</div>
       </div>
     </div>
   </main>
@@ -74,5 +76,46 @@
 
   <script src="config.js"></script>
   <script src="script.js"></script>
+  <script>
+    // Logic to render profile grids from localStorage
+    function renderProfileGrids() {
+      const watched = getStorage('watched');
+      const watchedGrid = document.getElementById('watched-grid');
+      if (watchedGrid) {
+        if (watched.length > 0) {
+          watchedGrid.innerHTML = watched.map(item => {
+             // Mock TMDB object format for card helpers
+             const obj = { id: item.id, title: item.title, name: item.title, poster_path: item.poster_path, vote_average: 0 };
+             if (item.type === 'movie') return createMovieCard(obj);
+             return createSeriesCard(obj);
+          }).join('');
+        } else {
+          watchedGrid.innerHTML = '<div class="profile-empty">No watched history found.</div>';
+        }
+      }
+
+      const favMovies = getStorage('fav-movies');
+      const favGrid = document.getElementById('fav-movies-grid');
+      if (favGrid && favMovies.length > 0) {
+        favGrid.innerHTML = favMovies.map(createMovieCard).join('');
+      }
+
+      const favSeries = getStorage('fav-series'); // Assuming this exists or similar
+      const fsGrid = document.getElementById('fav-series-grid');
+      if (fsGrid && favSeries && favSeries.length > 0) {
+        fsGrid.innerHTML = favSeries.map(createSeriesCard).join('');
+      }
+    }
+    
+    // Periodically refresh if sheet sync is slow
+    let syncChecks = 0;
+    const checkSync = setInterval(() => {
+      renderProfileGrids();
+      syncChecks++;
+      if (syncChecks > 10) clearInterval(checkSync);
+    }, 2000);
+
+    window.addEventListener('load', renderProfileGrids);
+  </script>
 </body>
 </html>
