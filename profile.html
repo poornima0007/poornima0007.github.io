@@ -37,15 +37,21 @@
     </div>
 
     <div class="profile-section">
-      <h4 style="color:var(--accent);display:flex;align-items:center;gap:0.5rem;">
+      <h4 style="color:var(--accent);display:flex;align-items:center;gap:0.5rem;margin-top:2rem;">
         <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-        Watched History (Saved to Sheets)
+        Watched Movies
       </h4>
-      <div class="profile-grid" id="watched-grid">
-        <div class="profile-empty">Loading your history from Google Sheets...</div>
+      <div class="profile-grid" id="watched-movies-grid">
+        <div class="profile-empty">Loading movies from Google Sheets...</div>
       </div>
 
-
+      <h4 style="color:var(--accent);display:flex;align-items:center;gap:0.5rem;margin-top:2rem;">
+        <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+        Watched Series
+      </h4>
+      <div class="profile-grid" id="watched-series-grid">
+        <div class="profile-empty">Loading series from Google Sheets...</div>
+      </div>
     </div>
   </main>
 
@@ -71,21 +77,35 @@
     // Logic to render profile grids from localStorage
     function renderProfileGrids() {
       const watched = getStorage('watched');
-      const watchedGrid = document.getElementById('watched-grid');
-      if (watchedGrid) {
-        if (watched.length > 0) {
-          watchedGrid.innerHTML = watched.map(item => {
-             // Mock TMDB object format for card helpers
+      const moviesGrid = document.getElementById('watched-movies-grid');
+      const seriesGrid = document.getElementById('watched-series-grid');
+
+      if (moviesGrid && seriesGrid) {
+        const movies = watched.filter(i => i.type === 'movie');
+        const series = watched.filter(i => i.type === 'tv' || i.type === 'series');
+
+        if (movies.length > 0) {
+          moviesGrid.innerHTML = movies.map(item => {
+             const obj = { id: item.id, title: item.title, poster_path: item.poster_path, vote_average: 0 };
+             return createMovieCard(obj);
+          }).join('');
+        } else {
+          moviesGrid.innerHTML = '<div class="profile-empty">No watched movies found.</div>';
+        }
+
+        if (series.length > 0) {
+          seriesGrid.innerHTML = series.map(item => {
              const obj = { id: item.id, title: item.title, name: item.title, poster_path: item.poster_path, vote_average: 0 };
-             if (item.type === 'movie') return createMovieCard(obj);
              return createSeriesCard(obj);
           }).join('');
         } else {
-          watchedGrid.innerHTML = '<div class="profile-empty">No watched history found.</div>';
+          seriesGrid.innerHTML = '<div class="profile-empty">No watched series found.</div>';
         }
+        
+        // Trigger animations
+        observeCards(moviesGrid);
+        observeCards(seriesGrid);
       }
-
-
     }
     
     // Periodically refresh if sheet sync is slow

@@ -584,26 +584,6 @@ main#main-content > h4 {
   color: #fff;
   z-index: 2;
 }
-.card-category {
-  position: absolute;
-  top: 2rem;
-  left: 0.6rem;
-  padding: 0.1rem 0.4rem;
-  border-radius: var(--radius-xs);
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  color: #fff;
-  z-index: 2;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-  text-transform: uppercase;
-}
-.card-category.movie {
-  background: var(--accent);
-}
-.card-category.tv {
-  background: #7c4dff; /* A nice purple for series */
-}
 .card-genre-chips {
   position: absolute;
   bottom: 2.2rem;

@@ -166,7 +166,7 @@ async function findOrCreateSpreadsheet() {
         spreadsheetId: spreadsheetId,
         range: 'Sheet1!A1:E1',
         valueInputOption: 'RAW',
-        resource: { values: [['ID', 'Type', 'Title', 'Poster', 'Timestamp']] }
+        resource: { values: [['ID', 'Category', 'Title', 'Poster', 'Timestamp']] }
       });
     }
     localStorage.setItem('poflix_spreadsheet_id', spreadsheetId);
@@ -176,11 +176,12 @@ async function findOrCreateSpreadsheet() {
 async function syncToSheets(item) {
   if (!googleUser || !spreadsheetId) return;
   try {
+    const category = item.type === 'movie' ? 'Movie' : 'Series';
     await gapi.client.sheets.spreadsheets.values.append({
       spreadsheetId: spreadsheetId,
       range: 'Sheet1!A2',
       valueInputOption: 'RAW',
-      resource: { values: [[item.id, item.type, item.title, item.poster_path, new Date().toISOString()]] }
+      resource: { values: [[item.id, category, item.title, item.poster_path, new Date().toISOString()]] }
     });
   } catch (e) { console.error("Sheet append failed", e); }
 }
@@ -194,7 +195,12 @@ async function syncFromSheets() {
     });
     const rows = res.result.values;
     if (rows) {
-      const watched = rows.map(r => ({ id: r[0], type: r[1], title: r[2], poster_path: r[3] }));
+      const watched = rows.map(r => ({ 
+        id: r[0], 
+        type: String(r[1]).toLowerCase() === 'movie' ? 'movie' : 'tv', 
+        title: r[2], 
+        poster_path: r[3] 
+      }));
       localStorage.setItem('watched', JSON.stringify(watched));
     }
   } catch (e) { console.error("Sheet read failed", e); }
@@ -470,7 +476,10 @@ function renderPagination(containerId, currentPage, totalPages, onPageChange) {
 function createMovieCard(movie) {
   const year = (movie.release_date || '').slice(0, 4);
   const rating = movie.vote_average ? movie.vote_average.toFixed(1) : '';
-  const posterUrl = movie.poster_path ? `https://image.tmdb.org/t/p/w342${movie.poster_path}` : '';
+  const genres = (movie.genre_ids || []).slice(0, 2).map(id => genreMapMovie[id] || '').filter(Boolean);
+  const posterUrl = movie.poster_path
+    ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
+    : '';
   if (!posterUrl) return '';
   const isW = isWatched(movie.id);
   const watchedBtnClass = isW ? ' active' : '';
@@ -480,7 +489,6 @@ function createMovieCard(movie) {
       <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
     </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
-    <span class="card-category movie">MOVIE</span>
     ${rating ? `<span class="card-rating">⭐ ${rating}</span>` : ''}
     <img src="${posterUrl}" alt="${movie.title}" loading="lazy">
     <div class="movie-title">${movie.title}</div>
@@ -490,7 +498,9 @@ function createMovieCard(movie) {
 function createSeriesCard(series) {
   const year = (series.first_air_date || '').slice(0, 4);
   const rating = series.vote_average ? series.vote_average.toFixed(1) : '';
-  const posterUrl = series.poster_path ? `https://image.tmdb.org/t/p/w342${series.poster_path}` : '';
+  const posterUrl = series.poster_path
+    ? `https://image.tmdb.org/t/p/w342${series.poster_path}`
+    : '';
   if (!posterUrl) return '';
   const isW = isWatched(series.id);
   const watchedBtnClass = isW ? ' active' : '';
@@ -500,7 +510,6 @@ function createSeriesCard(series) {
       <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
     </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
-    <span class="card-category tv">SERIES</span>
     ${rating ? `<span class="card-rating">⭐ ${rating}</span>` : ''}
     <img src="${posterUrl}" alt="${series.name}" loading="lazy">
     <div class="movie-title">${series.name}</div>
@@ -510,7 +519,9 @@ function createSeriesCard(series) {
 function createCarouselMovieCard(movie) {
   const year = (movie.release_date || '').slice(0, 4);
   const rating = movie.vote_average ? movie.vote_average.toFixed(1) : '';
-  const posterUrl = movie.poster_path ? `https://image.tmdb.org/t/p/w342${movie.poster_path}` : '';
+  const posterUrl = movie.poster_path
+    ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
+    : '';
   if (!posterUrl) return '';
   const isW = isWatched(movie.id);
   const watchedBtnClass = isW ? ' active' : '';
@@ -520,7 +531,6 @@ function createCarouselMovieCard(movie) {
       <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
     </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
-    <span class="card-category movie">MOVIE</span>
     ${rating ? `<span class="card-rating">⭐ ${rating}</span>` : ''}
     <img src="${posterUrl}" alt="${movie.title}" loading="lazy">
     <div class="movie-title">${movie.title}</div>
@@ -530,7 +540,9 @@ function createCarouselMovieCard(movie) {
 function createCarouselSeriesCard(series) {
   const year = (series.first_air_date || '').slice(0, 4);
   const rating = series.vote_average ? series.vote_average.toFixed(1) : '';
-  const posterUrl = series.poster_path ? `https://image.tmdb.org/t/p/w342${series.poster_path}` : '';
+  const posterUrl = series.poster_path
+    ? `https://image.tmdb.org/t/p/w342${series.poster_path}`
+    : '';
   if (!posterUrl) return '';
   const isW = isWatched(series.id);
   const watchedBtnClass = isW ? ' active' : '';
@@ -540,7 +552,6 @@ function createCarouselSeriesCard(series) {
       <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
     </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
-    <span class="card-category tv">SERIES</span>
     ${rating ? `<span class="card-rating">⭐ ${rating}</span>` : ''}
     <img src="${posterUrl}" alt="${series.name}" loading="lazy">
     <div class="movie-title">${series.name}</div>
