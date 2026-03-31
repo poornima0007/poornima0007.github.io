@@ -147,6 +147,7 @@ function updateNavbarAuth() {
         <button onclick="logout()" class="btn-logout-nav">
           Logout
         </button>
+        <a href="#" onclick="event.preventDefault(); surpriseMe();" class="surprise-link">✨ Surprise Me</a>
       </div>
     `;
   } else {
@@ -445,19 +446,57 @@ async function toggleWatched(item, btn) {
     if (googleUser) removeFromSheets(item.id, 'watched'); 
   } else {
     watched.push(item);
+    setStorage('watched', watched);
     btn.classList.add('active');
     if (card) card.classList.add('watched-glow');
     if (isDetailBtn) {
       btn.innerHTML = '✔ Watched';
     }
+    // Fetch Metadata for stats (runtime, genres)
+    fetchWatchedMetadata(item.id, item.type);
+    
     if (googleUser) {
       syncToSheets(item, 'watched');
-      // Auto-remove from wishlist if present
       removeFromWishlistIfPresent(item.id);
     }
+    triggerUIRefresh('watched');
   }
-  setStorage('watched', watched);
 }
+
+// Stats Metadata storage
+async function fetchWatchedMetadata(id, type) {
+  try {
+    const meta = getStorage('watched_metadata') || {};
+    if (meta[id]) return meta[id];
+    
+    const endpoint = type === 'movie' ? `/movie/${id}` : `/tv/${id}`;
+    const data = await fetchTMDB(endpoint);
+    
+    const itemMeta = {
+      runtime: type === 'movie' ? (data.runtime || 0) : (data.episode_run_time ? data.episode_run_time[0] || 0 : 0),
+      genres: (data.genres || []).map(g => g.name)
+    };
+    
+    meta[id] = itemMeta;
+    setStorage('watched_metadata', meta);
+    return itemMeta;
+  } catch (e) { return null; }
+}
+
+// Background Maintenance: Fetch metadata for existing items
+async function fetchMissingMetadata() {
+  const watched = getStorage('watched') || [];
+  const meta = getStorage('watched_metadata') || {};
+  for (const item of watched) {
+    if (!meta[item.id]) {
+      await fetchWatchedMetadata(item.id, item.type);
+      // Wait a bit between calls to be safe with rate limits
+      await new Promise(r => setTimeout(r, 200));
+    }
+  }
+  if (watched.length > 0) renderStatsDashboard();
+}
+fetchMissingMetadata();
 
 async function toggleWishlist(item, btn) {
   let wishlist = getStorage('wishlist') || [];
@@ -1614,6 +1653,74 @@ if (document.getElementById('wishlist-movies-grid')) {
   loadGenreMaps().then(() => renderWishlistPage()); // Update genres if map was loading
 }
 
+// --- User Stats Logic ---
+function renderStatsDashboard() {
+  const container = document.getElementById('stats-dashboard');
+  if (!container) return;
+  
+  const watched = getStorage('watched') || [];
+  const meta = getStorage('watched_metadata') || {};
+  
+  let totalMinutes = 0;
+  const genreCounts = {};
+  
+  watched.forEach(item => {
+    const m = meta[item.id];
+    if (m) {
+      totalMinutes += m.runtime || 0;
+      (m.genres || []).forEach(g => {
+        genreCounts[g] = (genreCounts[g] || 0) + 1;
+      });
+    }
+  });
+  
+  const days = Math.floor(totalMinutes / (24 * 60));
+  const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+  const topGenre = Object.entries(genreCounts).sort((a,b) => b[1] - a[1])[0]?.[0] || 'Unknown';
+  
+  container.innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value">${watched.length}</div>
+        <div class="stat-label">Watched Titles</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${days}d ${hours}h</div>
+        <div class="stat-label">Total Watch Time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${topGenre}</div>
+        <div class="stat-label">Favorite Genre</div>
+      </div>
+    </div>
+  `;
+}
+
+// Refresh stats when profile updates
+const originalRefresh = triggerUIRefresh;
+triggerUIRefresh = function(listType) {
+  originalRefresh(listType);
+  if (listType === 'watched') renderStatsDashboard();
+};
+
+if (document.getElementById('stats-dashboard')) {
+  renderStatsDashboard();
+}
+
+// --- Surprise Me Logic ---
+async function surpriseMe() {
+  try {
+    const randomPage = Math.floor(Math.random() * 5) + 1;
+    const data = await fetchTMDB('/movie/top_rated', { page: randomPage });
+    const movies = filterAdultContent(data.results || []);
+    if (movies.length === 0) return;
+    const randomMovie = movies[Math.floor(Math.random() * movies.length)];
+    window.location.href = `movie_detail.html?id=${randomMovie.id}`;
+  } catch (e) {
+    alert("Discovery is taking a break. Try again in a second!");
+  }
+}
+
 // ============================================
 // Intersection Observer for Card Animations
 // ============================================
@@ -1657,6 +1764,19 @@ document.addEventListener('DOMContentLoaded', () => {
       toggle.classList.toggle('open');
       nav.classList.toggle('open');
     });
+    
+    // Ensure "Surprise Me" exists in the navbar dynamically
+    if (!nav.querySelector('.surprise-link')) {
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <a href="#" onclick="event.preventDefault(); surpriseMe();" class="surprise-link" title="Surprise Me">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="dice-icon">
+            <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+            <path d="M12 12h.01"/><path d="M16 8h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/><path d="M8 8h.01"/>
+          </svg>
+        </a>`;
+      nav.appendChild(li);
+    }
   }
 
   // Active nav link
