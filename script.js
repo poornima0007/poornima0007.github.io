@@ -102,6 +102,14 @@ function updateNavbarAuth() {
   const navContainer = document.getElementById('navbar-nav');
   if (!navContainer) return;
   
+  // Hide the original Profile link to prevent duplicates
+  const allLinks = navContainer.querySelectorAll('li a');
+  allLinks.forEach(link => {
+    if (link.getAttribute('href') === 'profile.html' && !link.classList.contains('nav-user')) {
+      link.parentElement.style.display = 'none';
+    }
+  });
+
   let authLink = navContainer.querySelector('.auth-link');
   if (!authLink) {
     authLink = document.createElement('li');
@@ -109,10 +117,14 @@ function updateNavbarAuth() {
     navContainer.appendChild(authLink);
   }
 
+  const logoutBtn = document.getElementById('logout-btn');
+
   if (googleUser) {
     authLink.innerHTML = `<a href="profile.html" class="nav-user"><img src="${googleUser.picture}" alt="User" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:8px;">Profile</a>`;
+    if (logoutBtn) logoutBtn.style.display = 'inline-block';
   } else {
     authLink.innerHTML = `<a href="login.html" class="btn-login-nav">Login</a>`;
+    if (logoutBtn) logoutBtn.style.display = 'none';
   }
 }
 
