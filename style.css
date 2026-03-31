@@ -1832,16 +1832,18 @@ footer {
 
 /* Navbar Auth Styles */
 .nav-user {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 0.8rem !important;
   font-weight: 600;
   color: #fff !important;
   transition: opacity var(--transition-fast);
-  background: rgba(255, 255, 255, 0.03);
-  padding: 0.2rem 1rem 0.2rem 0.2rem;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.25rem 1rem 0.25rem 0.25rem;
   border-radius: var(--radius-full);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  white-space: nowrap;
 }
 .nav-user img {
   border: 2px solid var(--accent);
@@ -1850,6 +1852,8 @@ footer {
   border-radius: 50%;
   width: 34px !important;
   height: 34px !important;
+  object-fit: cover;
+  box-shadow: 0 0 10px var(--accent-glow);
 }
 .nav-user:hover {
   background: rgba(255, 255, 255, 0.07);
@@ -1866,12 +1870,36 @@ footer {
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  text-decoration: none;
 }
 .btn-login-nav:hover {
   background: var(--accent);
   color: #fff !important;
   transform: translateY(-2px);
   box-shadow: 0 4px 20px var(--accent-glow);
+}
+.btn-logout-nav {
+  background: rgba(255, 77, 109, 0.1);
+  color: var(--accent) !important;
+  border: 1px solid var(--accent);
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  transition: all var(--transition-fast);
+}
+.btn-logout-nav:hover {
+  background: var(--accent);
+  color: #fff !important;
+  box-shadow: 0 4px 12px var(--accent-glow);
+  transform: translateY(-1px);
+}
+.nav-auth-group {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
 }
 
 /* Watched Toggle Button on Cards */

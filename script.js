@@ -130,12 +130,12 @@ function updateNavbarAuth() {
     const firstName = googleUser.given_name || (googleUser.name ? googleUser.name.split(' ')[0] : 'Profile');
     
     authLink.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 0.8rem;">
-        <a href="profile.html" class="nav-user" title="Go to Profile" style="color:var(--text-primary); font-weight:600;">
-          <img src="${googleUser.picture}" alt="User" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--accent);box-shadow:0 0 10px var(--accent-glow);">
+      <div class="nav-auth-group">
+        <a href="profile.html" class="nav-user" title="Go to Profile">
+          <img src="${googleUser.picture}" alt="User">
           ${firstName}
         </a>
-        <button onclick="logout()" style="background:rgba(255, 77, 109, 0.15); color:var(--accent); border:1px solid var(--accent); padding:0.4rem 0.8rem; border-radius:var(--radius-full); cursor:pointer; font-weight:600; font-family:'Outfit', sans-serif; font-size:0.85rem; transition:all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.color='#fff';" onmouseout="this.style.background='rgba(255, 77, 109, 0.15)'; this.style.color='var(--accent)';">
+        <button onclick="logout()" class="btn-logout-nav">
           Logout
         </button>
       </div>
