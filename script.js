@@ -1768,7 +1768,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Ensure "Dice" exists in the navbar dynamically
     if (!nav.querySelector('.surprise-link')) {
       const li = document.createElement('li');
-      li.innerHTML = '<a href="#" onclick="event.preventDefault(); rollDice();" class="surprise-link">🎲 Dice</a>';
+      li.innerHTML = '<a href="#" onclick="event.preventDefault(); rollDice();" class="surprise-link">🎲</a>';
       nav.appendChild(li);
     }
   }
