@@ -1910,7 +1910,7 @@ footer {
   gap: 0.8rem;
 }
 
-.btn-watched-detail {
+.btn-watched-detail, .btn-wishlist-detail {
   padding: 0.7rem 1.5rem;
   border-radius: var(--radius-md);
   font-weight: 700;
@@ -1924,7 +1924,7 @@ footer {
   color: var(--text-primary);
   border: 1px solid var(--border-subtle);
 }
-.btn-watched-detail:hover {
+.btn-watched-detail:hover, .btn-wishlist-detail:hover {
   transform: translateY(-2px);
   background: var(--surface-hover);
   border-color: var(--border-accent);
@@ -1935,11 +1935,16 @@ footer {
   border-color: var(--accent) !important;
   box-shadow: 0 4px 15px var(--accent-glow);
 }
+.btn-wishlist-detail.active {
+  background: var(--gold) !important;
+  color: #000 !important;
+  border-color: var(--gold) !important;
+  box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+}
 
-.btn-watched {
+.btn-watched, .btn-wishlist {
   position: absolute;
   top: 10px;
-  right: 10px;
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -1955,20 +1960,38 @@ footer {
   z-index: 100;
   transition: all var(--transition-fast);
   padding: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-5px);
 }
+.btn-watched { right: 10px; }
+.btn-wishlist { right: 48px; font-size: 14px; }
 
-.btn-watched:hover {
+.btn-watched:hover, .btn-wishlist:hover {
   transform: scale(1.1);
   background: rgba(0, 0, 0, 0.65);
   color: #fff;
   border-color: var(--accent);
 }
+.btn-wishlist:hover { border-color: var(--gold); }
 
 .btn-watched.active {
   background: var(--accent);
   color: #fff;
   border-color: var(--accent);
   box-shadow: 0 0 15px var(--accent-glow);
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: translateY(0) !important;
+}
+.btn-wishlist.active {
+  background: var(--gold);
+  color: #000;
+  border-color: var(--gold);
+  box-shadow: 0 0 15px rgba(251, 191, 36, 0.3);
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: translateY(0) !important;
 }
 
 .btn-watched svg {
@@ -1980,39 +2003,14 @@ footer {
   display: block;
 }
 
-/* Hide Watched toggle by default to keep grids clean,
-   Reveal it purely on hover or if already active. */
-.btn-watched {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-5px);
-}
-/* Remove permanent visibility, it only shows on hover now */
-
-/* Beautiful Red Backlight Glow for Watched Cards */
-.animated-card.watched-glow, .carousel-card.watched-glow {
-  box-shadow: 0 0 30px rgba(255, 77, 109, 0.35);
-  border: 1px solid rgba(255, 77, 109, 0.5);
-  transition: all var(--transition-medium);
-}
-.animated-card.watched-glow::before, .carousel-card.watched-glow::before {
-  content: "";
-  position: absolute;
-  top: -2px; left: -2px; right: -2px; bottom: -2px;
-  background: var(--accent);
-  z-index: -1;
-  border-radius: inherit;
-  filter: blur(8px);
-  opacity: 0.15;
-}
-.animated-card:hover .btn-watched, .carousel-card:hover .btn-watched {
+.animated-card:hover .btn-watched, .carousel-card:hover .btn-watched,
+.animated-card:hover .btn-wishlist, .carousel-card:hover .btn-wishlist {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0);
 }
 
-/* Tooltip for the button */
-.btn-watched::after {
+.btn-watched::after, .btn-wishlist::after {
   content: "Mark Watched";
   position: absolute;
   bottom: 100%;
@@ -2030,12 +2028,28 @@ footer {
   transition: all var(--transition-fast);
   font-family: 'Outfit', sans-serif;
 }
+.btn-wishlist::after { content: "Watch Later"; right: -10px; }
 
-.btn-watched:hover::after {
+.btn-watched:hover::after, .btn-wishlist:hover::after {
   opacity: 1;
   transform: translateY(-5px);
 }
+.btn-watched.active::after { content: "Watched"; }
+.btn-wishlist.active::after { content: "In Wishlist"; }
 
-.btn-watched.active::after {
-  content: "Watched";
+/* Beautiful Glow for Watched Cards */
+.animated-card.watched-glow, .carousel-card.watched-glow {
+  box-shadow: 0 0 30px rgba(255, 77, 109, 0.35);
+  border: 1px solid rgba(255, 77, 109, 0.5);
+  transition: all var(--transition-medium);
+}
+.animated-card.watched-glow::before, .carousel-card.watched-glow::before {
+  content: "";
+  position: absolute;
+  top: -2px; left: -2px; right: -2px; bottom: -2px;
+  background: var(--accent);
+  z-index: -1;
+  border-radius: inherit;
+  filter: blur(8px);
+  opacity: 0.15;
 }

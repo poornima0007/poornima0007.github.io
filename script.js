@@ -88,7 +88,8 @@ async function checkUserStatus() {
       localStorage.setItem('poflix_user_info', JSON.stringify(userInfo));
       updateNavbarAuth();
       if (!spreadsheetId) await findOrCreateSpreadsheet();
-      await syncFromSheets();
+      await syncFromSheets('watched');
+      await syncFromSheets('wishlist');
     }
   } catch (e) {
     console.error("Auth check failed", e);
@@ -161,7 +162,7 @@ async function findOrCreateSpreadsheet() {
         fields: 'spreadsheetId,sheets(properties(sheetId,title))',
       });
       spreadsheetId = createRes.result.spreadsheetId;
-      // Add Headers
+      // Add Headers to first sheet
       await gapi.client.sheets.spreadsheets.values.update({
         spreadsheetId: spreadsheetId,
         range: 'A1:E1',
@@ -170,28 +171,57 @@ async function findOrCreateSpreadsheet() {
       });
     }
     
-    // Fetch current sheet properties to avoid hardcoded 'Sheet1' or '0'
-    const ssMeta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId: spreadsheetId });
-    const firstSheet = ssMeta.result.sheets[0].properties;
     localStorage.setItem('poflix_spreadsheet_id', spreadsheetId);
-    localStorage.setItem('poflix_sheet_title', firstSheet.title);
-    localStorage.setItem('poflix_sheet_id', firstSheet.sheetId);
+
+    // Fetch spreadsheet metadata to check for Wishlist sheet
+    const ssMeta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId: spreadsheetId });
+    const sheets = ssMeta.result.sheets;
+    
+    // 1. Identify 'Watched' sheet (first one)
+    const watchedSheet = sheets[0].properties;
+    localStorage.setItem('poflix_watched_title', watchedSheet.title);
+    localStorage.setItem('poflix_watched_id', watchedSheet.sheetId);
+
+    // 2. Identify or Create 'Wishlist' sheet
+    let wishlistSheet = sheets.find(s => s.properties.title === 'Wishlist');
+    if (!wishlistSheet) {
+      const addRes = await gapi.client.sheets.spreadsheets.batchUpdate({
+        spreadsheetId: spreadsheetId,
+        resource: {
+          requests: [{ addSheet: { properties: { title: 'Wishlist' } } }]
+        }
+      });
+      const newSheet = addRes.result.replies[0].addSheet.properties;
+      localStorage.setItem('poflix_wishlist_title', newSheet.title);
+      localStorage.setItem('poflix_wishlist_id', newSheet.sheetId);
+      // Init headers
+      await gapi.client.sheets.spreadsheets.values.update({
+        spreadsheetId: spreadsheetId,
+        range: 'Wishlist!A1:E1',
+        valueInputOption: 'RAW',
+        resource: { values: [['ID', 'Category', 'Title', 'Poster', 'Timestamp']] }
+      });
+    } else {
+      localStorage.setItem('poflix_wishlist_title', wishlistSheet.properties.title);
+      localStorage.setItem('poflix_wishlist_id', wishlistSheet.properties.sheetId);
+    }
+    
   } catch (e) { console.error("Sheets discovery failed", e); }
 }
 
-function getSheetConfig() {
-  return {
-    id: localStorage.getItem('poflix_spreadsheet_id'),
-    title: localStorage.getItem('poflix_sheet_title') || 'Sheet1',
-    gid: localStorage.getItem('poflix_sheet_id') || 0
-  };
+function getSheetConfig(listType = 'watched') {
+  const ssId = localStorage.getItem('poflix_spreadsheet_id');
+  if (!ssId) return null;
+  const title = localStorage.getItem(`poflix_${listType}_title`) || (listType === 'watched' ? 'Sheet1' : 'Wishlist');
+  const gid = localStorage.getItem(`poflix_${listType}_id`) || 0;
+  return { id: ssId, title, gid };
 }
 
-async function syncToSheets(item) {
-  const config = getSheetConfig();
-  if (!googleUser || !config.id) return;
+async function syncToSheets(item, listType = 'watched') {
+  const config = getSheetConfig(listType);
+  if (!googleUser || !config || !config.id) return;
   try {
-    // 1. Check for duplicates (even partial sheet scans)
+    // 1. Check for duplicates
     const getRes = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId: config.id,
       range: `${config.title}!A:A`
@@ -207,14 +237,14 @@ async function syncToSheets(item) {
       valueInputOption: 'RAW',
       resource: { values: [[item.id, category, item.title, item.poster_path, new Date().toISOString()]] }
     });
-  } catch (e) { console.error("Sheet append failed", e); }
+  } catch (e) { console.error(`Sheet append failed (${listType})`, e); }
 }
 
-async function removeFromSheets(id) {
-  const config = getSheetConfig();
-  if (!googleUser || !config.id) return;
+async function removeFromSheets(id, listType = 'watched') {
+  const config = getSheetConfig(listType);
+  if (!googleUser || !config || !config.id) return;
   try {
-    // 1. Find all matching row indices (to handle existing duplicates)
+    // 1. Find all matching row indices
     const getRes = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId: config.id,
       range: `${config.title}!A:A`
@@ -223,7 +253,6 @@ async function removeFromSheets(id) {
     if (!rows) return;
 
     const requests = [];
-    // Search from bottom to top to preserve indices during deletion sequence
     for (let i = rows.length - 1; i >= 0; i--) {
       if (String(rows[i][0]) === String(id)) {
         requests.push({
@@ -246,12 +275,12 @@ async function removeFromSheets(id) {
       spreadsheetId: config.id,
       resource: { requests }
     });
-    } catch (e) { console.error("Sheet removal failed", e); }
+  } catch (e) { console.error(`Sheet removal failed (${listType})`, e); }
 }
 
-async function syncFromSheets() {
-  const config = getSheetConfig();
-  if (!googleUser || !config.id) return;
+async function syncFromSheets(listType = 'watched') {
+  const config = getSheetConfig(listType);
+  if (!googleUser || !config || !config.id) return;
   try {
     const res = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId: config.id,
@@ -259,15 +288,15 @@ async function syncFromSheets() {
     });
     const rows = res.result.values;
     if (rows) {
-      const watched = rows.map(r => ({ 
+      const items = rows.map(r => ({ 
         id: r[0], 
         type: String(r[1]).toLowerCase() === 'movie' ? 'movie' : 'tv', 
         title: r[2], 
         poster_path: r[3] 
       }));
-      localStorage.setItem('watched', JSON.stringify(watched));
+      setStorage(listType, items);
     }
-  } catch (e) { console.error("Sheet read failed", e); }
+  } catch (e) { console.error(`Sheet read failed (${listType})`, e); }
 }
 
 // Call init on load
@@ -352,11 +381,15 @@ function getWatchedFromStorage() {
 }
 
 function isWatched(id) {
-  return getWatchedFromStorage().some(item => String(item.id) === String(id));
+  return (getStorage('watched') || []).some(item => String(item.id) === String(id));
+}
+
+function isWishlisted(id) {
+  return (getStorage('wishlist') || []).some(item => String(item.id) === String(id));
 }
 
 async function toggleWatched(item, btn) {
-  let watched = getWatchedFromStorage();
+  let watched = getStorage('watched') || [];
   const idx = watched.findIndex(i => String(i.id) === String(item.id));
   
   const isDetailBtn = btn.classList.contains('btn-watched-detail');
@@ -369,9 +402,7 @@ async function toggleWatched(item, btn) {
     if (isDetailBtn) {
       btn.innerHTML = '👁️ Mark as Watched';
     }
-    if (googleUser && spreadsheetId) {
-      removeFromSheets(item.id); 
-    }
+    if (googleUser) removeFromSheets(item.id, 'watched'); 
   } else {
     watched.push(item);
     btn.classList.add('active');
@@ -379,11 +410,60 @@ async function toggleWatched(item, btn) {
     if (isDetailBtn) {
       btn.innerHTML = '✔ Watched';
     }
-    if (googleUser && spreadsheetId) {
-      syncToSheets(item); 
+    if (googleUser) {
+      syncToSheets(item, 'watched');
+      // Auto-remove from wishlist if present
+      removeFromWishlistIfPresent(item.id);
     }
   }
   setStorage('watched', watched);
+}
+
+async function toggleWishlist(item, btn) {
+  let wishlist = getStorage('wishlist') || [];
+  const idx = wishlist.findIndex(i => String(i.id) === String(item.id));
+  
+  const isDetailBtn = btn.classList.contains('btn-wishlist-detail');
+  const card = btn.closest('.animated-card, .carousel-card');
+
+  if (idx >= 0) {
+    wishlist.splice(idx, 1);
+    btn.classList.remove('active');
+    if (isDetailBtn) {
+      btn.innerHTML = '🔖 Add to Wishlist';
+    } else if (btn.querySelector('.icon-bookmark')) {
+       btn.querySelector('.icon-bookmark').textContent = '🔖';
+    }
+    if (googleUser) removeFromSheets(item.id, 'wishlist');
+  } else {
+    wishlist.push(item);
+    btn.classList.add('active');
+    if (isDetailBtn) {
+      btn.innerHTML = '📌 In Wishlist';
+    } else if (btn.querySelector('.icon-bookmark')) {
+       btn.querySelector('.icon-bookmark').textContent = '📌';
+    }
+    if (googleUser) syncToSheets(item, 'wishlist');
+  }
+  setStorage('wishlist', wishlist);
+}
+
+function removeFromWishlistIfPresent(id) {
+  let wishlist = getStorage('wishlist') || [];
+  const idx = wishlist.findIndex(i => String(i.id) === String(id));
+  if (idx >= 0) {
+    wishlist.splice(idx, 1);
+    setStorage('wishlist', wishlist);
+    if (googleUser) removeFromSheets(id, 'wishlist');
+    
+    // Find any wishlist buttons on the page and update them
+    document.querySelectorAll(`[data-wishlist-id="${id}"]`).forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.classList.contains('btn-wishlist-detail')) {
+        btn.innerHTML = '🔖 Add to Wishlist';
+      }
+    });
+  }
 }
 
 // --- Skeleton Loaders ---
@@ -543,11 +623,16 @@ function createMovieCard(movie) {
     : '';
   if (!posterUrl) return '';
   const isW = isWatched(movie.id);
+  const isWL = isWishlisted(movie.id);
   const watchedBtnClass = isW ? ' active' : '';
+  const wishlistBtnClass = isWL ? ' active' : '';
   const watchedCardClass = isW ? ' watched-glow' : '';
   return `<a href="movie_detail.html?id=${movie.id}" class="animated-card${watchedCardClass}" data-id="${movie.id}">
     <button class="btn-watched${watchedBtnClass}" onclick="event.preventDefault(); toggleWatched({id:'${movie.id}', title:'${(movie.title||'').replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
       <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+    </button>
+    <button class="btn-wishlist${wishlistBtnClass}" data-wishlist-id="${movie.id}" onclick="event.preventDefault(); toggleWishlist({id:'${movie.id}', title:'${(movie.title||'').replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
+      <span class="icon-bookmark">${isWL ? '📌' : '🔖'}</span>
     </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
     ${rating ? `<span class="card-rating">⭐ ${rating}</span>` : ''}
@@ -564,11 +649,16 @@ function createSeriesCard(series) {
     : '';
   if (!posterUrl) return '';
   const isW = isWatched(series.id);
+  const isWL = isWishlisted(series.id);
   const watchedBtnClass = isW ? ' active' : '';
+  const wishlistBtnClass = isWL ? ' active' : '';
   const watchedCardClass = isW ? ' watched-glow' : '';
   return `<a href="series_detail.html?id=${series.id}" class="animated-card${watchedCardClass}" data-id="${series.id}">
     <button class="btn-watched${watchedBtnClass}" onclick="event.preventDefault(); toggleWatched({id:'${series.id}', title:'${(series.name||'').replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
       <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+    </button>
+    <button class="btn-wishlist${wishlistBtnClass}" data-wishlist-id="${series.id}" onclick="event.preventDefault(); toggleWishlist({id:'${series.id}', title:'${(series.name||'').replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
+      <span class="icon-bookmark">${isWL ? '📌' : '🔖'}</span>
     </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
     ${rating ? `<span class="card-rating">⭐ ${rating}</span>` : ''}
@@ -585,11 +675,16 @@ function createCarouselMovieCard(movie) {
     : '';
   if (!posterUrl) return '';
   const isW = isWatched(movie.id);
+  const isWL = isWishlisted(movie.id);
   const watchedBtnClass = isW ? ' active' : '';
+  const wishlistBtnClass = isWL ? ' active' : '';
   const watchedCardClass = isW ? ' watched-glow' : '';
   return `<a href="movie_detail.html?id=${movie.id}" class="carousel-card${watchedCardClass}" data-id="${movie.id}">
     <button class="btn-watched${watchedBtnClass}" onclick="event.preventDefault(); toggleWatched({id:'${movie.id}', title:'${(movie.title||'').replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
       <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+    </button>
+    <button class="btn-wishlist${wishlistBtnClass}" data-wishlist-id="${movie.id}" onclick="event.preventDefault(); toggleWishlist({id:'${movie.id}', title:'${(movie.title||'').replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
+      <span class="icon-bookmark">${isWL ? '📌' : '🔖'}</span>
     </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
     ${rating ? `<span class="card-rating">⭐ ${rating}</span>` : ''}
@@ -606,11 +701,16 @@ function createCarouselSeriesCard(series) {
     : '';
   if (!posterUrl) return '';
   const isW = isWatched(series.id);
+  const isWL = isWishlisted(series.id);
   const watchedBtnClass = isW ? ' active' : '';
+  const wishlistBtnClass = isWL ? ' active' : '';
   const watchedCardClass = isW ? ' watched-glow' : '';
   return `<a href="series_detail.html?id=${series.id}" class="carousel-card${watchedCardClass}" data-id="${series.id}">
     <button class="btn-watched${watchedBtnClass}" onclick="event.preventDefault(); toggleWatched({id:'${series.id}', title:'${(series.name||'').replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
       <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+    </button>
+    <button class="btn-wishlist${wishlistBtnClass}" data-wishlist-id="${series.id}" onclick="event.preventDefault(); toggleWishlist({id:'${series.id}', title:'${(series.name||'').replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
+      <span class="icon-bookmark">${isWL ? '📌' : '🔖'}</span>
     </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
     ${rating ? `<span class="card-rating">⭐ ${rating}</span>` : ''}
@@ -995,24 +1095,25 @@ async function renderMovieDetail() {
     posterCard.innerHTML = `<img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" alt="${movie.title}" loading="lazy">`;
 
     // Info
-    const genrePills = (movie.genres || []).map(g => `<span class="badge">${g.name}</span>`).join('');
     const isW = isWatched(movie.id);
-    const wBtnStyle = isW ? 'background:var(--accent);color:#fff;border:1px solid var(--accent);' : 'background:var(--surface);color:var(--text-primary);border:1px solid var(--border-subtle);';
+    const isWL = isWishlisted(movie.id);
     infoCard.innerHTML = `
-      <div class="movie-title-main">${movie.title}</div>
-      <div class="movie-meta">
-        <span class="badge">${movie.release_date ? movie.release_date.slice(0,4) : ''}</span>
-        <span>⭐ ${movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'}/10</span>
-        <span>${movie.vote_count || 0} votes</span>
-        <span>${movie.runtime ? movie.runtime + ' min' : ''}</span>
+      <h1 class="movie-title-detail">${movie.title}</h1>
+      <div class="movie-meta-detail">
+        <span>📅 ${movie.release_date}</span>
+        <span>⏱️ ${movie.runtime} min</span>
+        <span>⭐ ${movie.vote_average.toFixed(1)}</span>
       </div>
-      <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:1.5rem;">${genrePills}</div>
-      <div style="margin-bottom:1.5rem;">
+      <div class="movie-genres-detail">${movie.genres.map(g => `<span>${g.name}</span>`).join('')}</div>
+      <p class="movie-overview-detail">${movie.overview}</p>
+      <div class="movie-actions">
         <button class="btn-watched-detail${isW ? ' active' : ''}" onclick="toggleWatched({id:'${movie.id}', title:'${(movie.title||'').replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
           ${isW ? '✔ Watched' : '👁️ Mark as Watched'}
         </button>
+        <button class="btn-wishlist-detail${isWL ? ' active' : ''}" data-wishlist-id="${movie.id}" onclick="toggleWishlist({id:'${movie.id}', title:'${(movie.title||'').replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
+          ${isWL ? '📌 In Wishlist' : '🔖 Add to Wishlist'}
+        </button>
       </div>
-      <div class="movie-overview">${movie.overview || ''}</div>
     `;
 
     // Streaming sources
@@ -1122,24 +1223,25 @@ async function renderSeriesDetail() {
     posterCard.innerHTML = `<img src="https://image.tmdb.org/t/p/w500${series.poster_path}" alt="${series.name}" loading="lazy">`;
 
     // Info
-    const genrePills = (series.genres || []).map(g => `<span class="badge">${g.name}</span>`).join('');
     const isW = isWatched(series.id);
-    const wBtnStyle = isW ? 'background:var(--accent);color:#fff;border:1px solid var(--accent);' : 'background:var(--surface);color:var(--text-primary);border:1px solid var(--border-subtle);';
+    const isWL = isWishlisted(series.id);
     infoCard.innerHTML = `
-      <div class="series-title-main">${series.name}</div>
-      <div class="series-meta">
-        <span class="badge">${series.first_air_date ? series.first_air_date.slice(0,4) : ''}</span>
-        <span>⭐ ${series.vote_average ? series.vote_average.toFixed(1) : 'N/A'}/10</span>
-        <span>${series.vote_count || 0} votes</span>
-        <span>${series.number_of_seasons || '?'} Season${(series.number_of_seasons||0) !== 1 ? 's' : ''}</span>
+      <h1 class="movie-title-detail">${series.name}</h1>
+      <div class="movie-meta-detail">
+        <span>📅 ${series.first_air_date}</span>
+        <span>📺 ${series.number_of_seasons} Seasons</span>
+        <span>⭐ ${series.vote_average.toFixed(1)}</span>
       </div>
-      <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:1.5rem;">${genrePills}</div>
-      <div style="margin-bottom:1.5rem;">
+      <div class="movie-genres-detail">${series.genres.map(g => `<span>${g.name}</span>`).join('')}</div>
+      <p class="movie-overview-detail">${series.overview}</p>
+      <div class="movie-actions">
         <button class="btn-watched-detail${isW ? ' active' : ''}" onclick="toggleWatched({id:'${series.id}', title:'${(series.name||'').replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
           ${isW ? '✔ Watched' : '👁️ Mark as Watched'}
         </button>
+        <button class="btn-wishlist-detail${isWL ? ' active' : ''}" data-wishlist-id="${series.id}" onclick="toggleWishlist({id:'${series.id}', title:'${(series.name||'').replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
+          ${isWL ? '📌 In Wishlist' : '🔖 Add to Wishlist'}
+        </button>
       </div>
-      <div class="series-overview">${series.overview || ''}</div>
     `;
 
     async function renderPlayerSection(fade = false) {
@@ -1407,18 +1509,22 @@ if (document.getElementById('series-poster-card')) {
 // ============================================
 // Profile Page — Load from localStorage
 // ============================================
+// ============================================
+// Profile Page — Load from localStorage
+// ============================================
 function renderProfilePage() {
-  const watchlistMoviesGrid = document.getElementById('watchlist-movies-grid');
-  const watchlistSeriesGrid = document.getElementById('watchlist-series-grid');
+  const watchedMoviesGrid = document.getElementById('watched-movies-grid');
+  const watchedSeriesGrid = document.getElementById('watched-series-grid');
   
-  if (!watchlistMoviesGrid && !watchlistSeriesGrid) return;
+  if (!watchedMoviesGrid && !watchedSeriesGrid) return;
 
-  const wlMovies = getStorage('watchlist-movies');
-  const wlSeries = getStorage('watchlist-series');
+  const watched = getStorage('watched') || [];
+  const watchedMovies = watched.filter(item => item.type === 'movie');
+  const watchedSeries = watched.filter(item => item.type === 'tv' || item.type === 'series');
 
   const renderGrid = (grid, items, cardFn, emptyMsg) => {
     if (!grid) return;
-    if (items.length > 0) {
+    if (items && items.length > 0) {
       grid.innerHTML = items.map(cardFn).join('');
       observeCards(grid);
     } else {
@@ -1426,12 +1532,39 @@ function renderProfilePage() {
     }
   };
 
-  renderGrid(watchlistMoviesGrid, wlMovies, createMovieCard, 'Your movie watchlist is empty. Start adding!');
-  renderGrid(watchlistSeriesGrid, wlSeries, createSeriesCard, 'Your series watchlist is empty. Start adding!');
+  renderGrid(watchedMoviesGrid, watchedMovies, createMovieCard, "You haven't watched any movies yet.");
+  renderGrid(watchedSeriesGrid, watchedSeries, createSeriesCard, "You haven't watched any series yet.");
 }
 
-if (document.getElementById('watchlist-movies-grid') || document.getElementById('watched-grid')) {
+function renderWishlistPage() {
+  const wishlistMoviesGrid = document.getElementById('wishlist-movies-grid');
+  const wishlistSeriesGrid = document.getElementById('wishlist-series-grid');
+  
+  if (!wishlistMoviesGrid && !wishlistSeriesGrid) return;
+
+  const wishlist = getStorage('wishlist') || [];
+  const wishlistMovies = wishlist.filter(item => item.type === 'movie');
+  const wishlistSeries = wishlist.filter(item => item.type === 'tv' || item.type === 'series');
+
+  const renderGrid = (grid, items, cardFn, emptyMsg) => {
+    if (!grid) return;
+    if (items && items.length > 0) {
+      grid.innerHTML = items.map(cardFn).join('');
+      observeCards(grid);
+    } else {
+      grid.innerHTML = `<div class="profile-empty">${emptyMsg}</div>`;
+    }
+  };
+
+  renderGrid(wishlistMoviesGrid, wishlistMovies, createMovieCard, 'Your movie wishlist is empty. Start adding!');
+  renderGrid(wishlistSeriesGrid, wishlistSeries, createSeriesCard, 'Your series wishlist is empty. Start adding!');
+}
+
+if (document.getElementById('watched-movies-grid')) {
   loadGenreMaps().then(() => renderProfilePage());
+}
+if (document.getElementById('wishlist-movies-grid')) {
+  loadGenreMaps().then(() => renderWishlistPage());
 }
 
 // ============================================
