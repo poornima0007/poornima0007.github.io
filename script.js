@@ -470,10 +470,7 @@ function renderPagination(containerId, currentPage, totalPages, onPageChange) {
 function createMovieCard(movie) {
   const year = (movie.release_date || '').slice(0, 4);
   const rating = movie.vote_average ? movie.vote_average.toFixed(1) : '';
-  const genres = (movie.genre_ids || []).slice(0, 2).map(id => genreMapMovie[id] || '').filter(Boolean);
-  const posterUrl = movie.poster_path
-    ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
-    : '';
+  const posterUrl = movie.poster_path ? `https://image.tmdb.org/t/p/w342${movie.poster_path}` : '';
   if (!posterUrl) return '';
   const isW = isWatched(movie.id);
   const watchedBtnClass = isW ? ' active' : '';
@@ -483,6 +480,7 @@ function createMovieCard(movie) {
       <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
     </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
+    <span class="card-category movie">MOVIE</span>
     ${rating ? `<span class="card-rating">⭐ ${rating}</span>` : ''}
     <img src="${posterUrl}" alt="${movie.title}" loading="lazy">
     <div class="movie-title">${movie.title}</div>
@@ -492,9 +490,7 @@ function createMovieCard(movie) {
 function createSeriesCard(series) {
   const year = (series.first_air_date || '').slice(0, 4);
   const rating = series.vote_average ? series.vote_average.toFixed(1) : '';
-  const posterUrl = series.poster_path
-    ? `https://image.tmdb.org/t/p/w342${series.poster_path}`
-    : '';
+  const posterUrl = series.poster_path ? `https://image.tmdb.org/t/p/w342${series.poster_path}` : '';
   if (!posterUrl) return '';
   const isW = isWatched(series.id);
   const watchedBtnClass = isW ? ' active' : '';
@@ -504,6 +500,7 @@ function createSeriesCard(series) {
       <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
     </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
+    <span class="card-category tv">SERIES</span>
     ${rating ? `<span class="card-rating">⭐ ${rating}</span>` : ''}
     <img src="${posterUrl}" alt="${series.name}" loading="lazy">
     <div class="movie-title">${series.name}</div>
@@ -513,9 +510,7 @@ function createSeriesCard(series) {
 function createCarouselMovieCard(movie) {
   const year = (movie.release_date || '').slice(0, 4);
   const rating = movie.vote_average ? movie.vote_average.toFixed(1) : '';
-  const posterUrl = movie.poster_path
-    ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
-    : '';
+  const posterUrl = movie.poster_path ? `https://image.tmdb.org/t/p/w342${movie.poster_path}` : '';
   if (!posterUrl) return '';
   const isW = isWatched(movie.id);
   const watchedBtnClass = isW ? ' active' : '';
@@ -525,6 +520,7 @@ function createCarouselMovieCard(movie) {
       <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
     </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
+    <span class="card-category movie">MOVIE</span>
     ${rating ? `<span class="card-rating">⭐ ${rating}</span>` : ''}
     <img src="${posterUrl}" alt="${movie.title}" loading="lazy">
     <div class="movie-title">${movie.title}</div>
@@ -534,9 +530,7 @@ function createCarouselMovieCard(movie) {
 function createCarouselSeriesCard(series) {
   const year = (series.first_air_date || '').slice(0, 4);
   const rating = series.vote_average ? series.vote_average.toFixed(1) : '';
-  const posterUrl = series.poster_path
-    ? `https://image.tmdb.org/t/p/w342${series.poster_path}`
-    : '';
+  const posterUrl = series.poster_path ? `https://image.tmdb.org/t/p/w342${series.poster_path}` : '';
   if (!posterUrl) return '';
   const isW = isWatched(series.id);
   const watchedBtnClass = isW ? ' active' : '';
@@ -546,6 +540,7 @@ function createCarouselSeriesCard(series) {
       <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
     </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
+    <span class="card-category tv">SERIES</span>
     ${rating ? `<span class="card-rating">⭐ ${rating}</span>` : ''}
     <img src="${posterUrl}" alt="${series.name}" loading="lazy">
     <div class="movie-title">${series.name}</div>
