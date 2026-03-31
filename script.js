@@ -675,17 +675,18 @@ function createMovieCard(movie) {
   const watchedBtnClass = isW ? ' active' : '';
   const wishlistBtnClass = isWL ? ' active' : '';
   const watchedCardClass = isW ? ' watched-glow' : '';
+  const itemTitle = movie.title || movie.name || 'Untitled';
   return `<a href="movie_detail.html?id=${movie.id}" class="animated-card${watchedCardClass}" data-id="${movie.id}">
-    <button class="btn-watched${watchedBtnClass}" onclick="event.preventDefault(); toggleWatched({id:'${movie.id}', title:'${(movie.title||'').replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
+    <button class="btn-watched${watchedBtnClass}" onclick="event.preventDefault(); toggleWatched({id:'${movie.id}', title:'${itemTitle.replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
       <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
     </button>
-    <button class="btn-wishlist${wishlistBtnClass}" data-wishlist-id="${movie.id}" onclick="event.preventDefault(); toggleWishlist({id:'${movie.id}', title:'${(movie.title||'').replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
+    <button class="btn-wishlist${wishlistBtnClass}" data-wishlist-id="${movie.id}" onclick="event.preventDefault(); toggleWishlist({id:'${movie.id}', title:'${itemTitle.replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
       <span class="icon-bookmark">${isWL ? '📌' : '🔖'}</span>
     </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
     ${rating ? `<span class="card-rating">⭐ ${rating}</span>` : ''}
-    <img src="${posterUrl}" alt="${movie.title}" loading="lazy">
-    <div class="movie-title">${movie.title}</div>
+    <img src="${posterUrl}" alt="${itemTitle}" loading="lazy">
+    <div class="movie-title">${itemTitle}</div>
   </a>`;
 }
 
@@ -701,17 +702,18 @@ function createSeriesCard(series) {
   const watchedBtnClass = isW ? ' active' : '';
   const wishlistBtnClass = isWL ? ' active' : '';
   const watchedCardClass = isW ? ' watched-glow' : '';
+  const itemTitle = series.name || series.title || 'Untitled';
   return `<a href="series_detail.html?id=${series.id}" class="animated-card${watchedCardClass}" data-id="${series.id}">
-    <button class="btn-watched${watchedBtnClass}" onclick="event.preventDefault(); toggleWatched({id:'${series.id}', title:'${(series.name||'').replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
+    <button class="btn-watched${watchedBtnClass}" onclick="event.preventDefault(); toggleWatched({id:'${series.id}', title:'${itemTitle.replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
       <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
     </button>
-    <button class="btn-wishlist${wishlistBtnClass}" data-wishlist-id="${series.id}" onclick="event.preventDefault(); toggleWishlist({id:'${series.id}', title:'${(series.name||'').replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
+    <button class="btn-wishlist${wishlistBtnClass}" data-wishlist-id="${series.id}" onclick="event.preventDefault(); toggleWishlist({id:'${series.id}', title:'${itemTitle.replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
       <span class="icon-bookmark">${isWL ? '📌' : '🔖'}</span>
     </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
     ${rating ? `<span class="card-rating">⭐ ${rating}</span>` : ''}
-    <img src="${posterUrl}" alt="${series.name}" loading="lazy">
-    <div class="movie-title">${series.name}</div>
+    <img src="${posterUrl}" alt="${itemTitle}" loading="lazy">
+    <div class="movie-title">${itemTitle}</div>
   </a>`;
 }
 
@@ -727,17 +729,18 @@ function createCarouselMovieCard(movie) {
   const watchedBtnClass = isW ? ' active' : '';
   const wishlistBtnClass = isWL ? ' active' : '';
   const watchedCardClass = isW ? ' watched-glow' : '';
+  const itemTitle = movie.title || movie.name || 'Untitled';
   return `<a href="movie_detail.html?id=${movie.id}" class="carousel-card${watchedCardClass}" data-id="${movie.id}">
-    <button class="btn-watched${watchedBtnClass}" onclick="event.preventDefault(); toggleWatched({id:'${movie.id}', title:'${(movie.title||'').replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
+    <button class="btn-watched${watchedBtnClass}" onclick="event.preventDefault(); toggleWatched({id:'${movie.id}', title:'${itemTitle.replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
       <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
     </button>
-    <button class="btn-wishlist${wishlistBtnClass}" data-wishlist-id="${movie.id}" onclick="event.preventDefault(); toggleWishlist({id:'${movie.id}', title:'${(movie.title||'').replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
+    <button class="btn-wishlist${wishlistBtnClass}" data-wishlist-id="${movie.id}" onclick="event.preventDefault(); toggleWishlist({id:'${movie.id}', title:'${itemTitle.replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
       <span class="icon-bookmark">${isWL ? '📌' : '🔖'}</span>
     </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
     ${rating ? `<span class="card-rating">⭐ ${rating}</span>` : ''}
-    <img src="${posterUrl}" alt="${movie.title}" loading="lazy">
-    <div class="movie-title">${movie.title}</div>
+    <img src="${posterUrl}" alt="${itemTitle}" loading="lazy">
+    <div class="movie-title">${itemTitle}</div>
   </a>`;
 }
 
@@ -753,17 +756,18 @@ function createCarouselSeriesCard(series) {
   const watchedBtnClass = isW ? ' active' : '';
   const wishlistBtnClass = isWL ? ' active' : '';
   const watchedCardClass = isW ? ' watched-glow' : '';
+  const itemTitle = series.name || series.title || 'Untitled';
   return `<a href="series_detail.html?id=${series.id}" class="carousel-card${watchedCardClass}" data-id="${series.id}">
-    <button class="btn-watched${watchedBtnClass}" onclick="event.preventDefault(); toggleWatched({id:'${series.id}', title:'${(series.name||'').replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
+    <button class="btn-watched${watchedBtnClass}" onclick="event.preventDefault(); toggleWatched({id:'${series.id}', title:'${itemTitle.replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
       <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
     </button>
-    <button class="btn-wishlist${wishlistBtnClass}" data-wishlist-id="${series.id}" onclick="event.preventDefault(); toggleWishlist({id:'${series.id}', title:'${(series.name||'').replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
+    <button class="btn-wishlist${wishlistBtnClass}" data-wishlist-id="${series.id}" onclick="event.preventDefault(); toggleWishlist({id:'${series.id}', title:'${itemTitle.replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
       <span class="icon-bookmark">${isWL ? '📌' : '🔖'}</span>
     </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
     ${rating ? `<span class="card-rating">⭐ ${rating}</span>` : ''}
-    <img src="${posterUrl}" alt="${series.name}" loading="lazy">
-    <div class="movie-title">${series.name}</div>
+    <img src="${posterUrl}" alt="${itemTitle}" loading="lazy">
+    <div class="movie-title">${itemTitle}</div>
   </a>`;
 }
 
