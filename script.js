@@ -176,6 +176,18 @@ async function findOrCreateSpreadsheet() {
 async function syncToSheets(item) {
   if (!googleUser || !spreadsheetId) return;
   try {
+    // 1. Check for duplicates first
+    const getRes = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId: spreadsheetId,
+      range: 'Sheet1!A2:A'
+    });
+    const ids = getRes.result.values ? getRes.result.values.map(r => String(r[0])) : [];
+    if (ids.includes(String(item.id))) {
+      console.log("Item already in Sheets, skipping append.");
+      return;
+    }
+
+    // 2. Append if not found
     const category = item.type === 'movie' ? 'Movie' : 'Series';
     await gapi.client.sheets.spreadsheets.values.append({
       spreadsheetId: spreadsheetId,
@@ -184,6 +196,45 @@ async function syncToSheets(item) {
       resource: { values: [[item.id, category, item.title, item.poster_path, new Date().toISOString()]] }
     });
   } catch (e) { console.error("Sheet append failed", e); }
+}
+
+async function removeFromSheets(id) {
+  if (!googleUser || !spreadsheetId) return;
+  try {
+    // 1. Find the row index
+    const getRes = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId: spreadsheetId,
+      range: 'Sheet1!A:A'
+    });
+    const rows = getRes.result.values;
+    if (!rows) return;
+
+    const rowIndex = rows.findIndex(r => String(r[0]) === String(id));
+    if (rowIndex === -1) {
+      console.log("Item not found in Sheets, nothing to remove.");
+      return;
+    }
+
+    // 2. Delete the row (rowIndex is 0-indexed, Sheets rows are 1-indexed)
+    await gapi.client.sheets.spreadsheets.batchUpdate({
+      spreadsheetId: spreadsheetId,
+      resource: {
+        requests: [
+          {
+            deleteDimension: {
+              range: {
+                sheetId: 0, // Assuming first sheet
+                dimension: 'ROWS',
+                startIndex: rowIndex,
+                endIndex: rowIndex + 1
+              }
+            }
+          }
+        ]
+      }
+    });
+    console.log(`Deleted row ${rowIndex + 1} from Sheets.`);
+  } catch (e) { console.error("Sheet removal failed", e); }
 }
 
 async function syncFromSheets() {
@@ -305,6 +356,9 @@ async function toggleWatched(item, btn) {
     if (isDetailBtn) {
       btn.innerHTML = '👁️ Mark as Watched';
     }
+    if (googleUser && spreadsheetId) {
+      removeFromSheets(item.id); 
+    }
   } else {
     watched.push(item);
     btn.classList.add('active');
@@ -313,7 +367,7 @@ async function toggleWatched(item, btn) {
       btn.innerHTML = '✔ Watched';
     }
     if (googleUser && spreadsheetId) {
-      syncToSheets(item); // removed await for speed, let it sync in bg
+      syncToSheets(item); 
     }
   }
   setStorage('watched', watched);
