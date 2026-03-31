@@ -1902,9 +1902,30 @@ footer {
   gap: 0.8rem;
 }
 
-/* Watched Toggle Button on Cards */
-.animated-card, .carousel-card {
-  position: relative;
+.btn-watched-detail {
+  padding: 0.7rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1rem;
+  background: var(--surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+}
+.btn-watched-detail:hover {
+  transform: translateY(-2px);
+  background: var(--surface-hover);
+  border-color: var(--border-accent);
+}
+.btn-watched-detail.active {
+  background: var(--accent) !important;
+  color: #fff !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 4px 15px var(--accent-glow);
 }
 
 .btn-watched {

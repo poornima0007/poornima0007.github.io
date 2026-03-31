@@ -304,9 +304,6 @@ async function toggleWatched(item, btn) {
     if (card) card.classList.remove('watched-glow');
     if (isDetailBtn) {
       btn.innerHTML = '👁️ Mark as Watched';
-      btn.style.background = 'var(--surface)';
-      btn.style.color = 'var(--text-primary)';
-      btn.style.border = '1px solid var(--border-subtle)';
     }
   } else {
     watched.push(item);
@@ -314,9 +311,6 @@ async function toggleWatched(item, btn) {
     if (card) card.classList.add('watched-glow');
     if (isDetailBtn) {
       btn.innerHTML = '✔ Watched';
-      btn.style.background = 'var(--accent)';
-      btn.style.color = '#fff';
-      btn.style.border = '1px solid var(--accent)';
     }
     if (googleUser && spreadsheetId) {
       syncToSheets(item); // removed await for speed, let it sync in bg
@@ -947,7 +941,7 @@ async function renderMovieDetail() {
       </div>
       <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:1.5rem;">${genrePills}</div>
       <div style="margin-bottom:1.5rem;">
-        <button class="btn-login-nav btn-watched-detail${isW ? ' active' : ''}" style="${wBtnStyle}" onclick="toggleWatched({id:'${movie.id}', title:'${(movie.title||'').replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
+        <button class="btn-watched-detail${isW ? ' active' : ''}" onclick="toggleWatched({id:'${movie.id}', title:'${(movie.title||'').replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
           ${isW ? '✔ Watched' : '👁️ Mark as Watched'}
         </button>
       </div>
@@ -1074,7 +1068,7 @@ async function renderSeriesDetail() {
       </div>
       <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:1.5rem;">${genrePills}</div>
       <div style="margin-bottom:1.5rem;">
-        <button class="btn-login-nav btn-watched-detail${isW ? ' active' : ''}" style="${wBtnStyle}" onclick="toggleWatched({id:'${series.id}', title:'${(series.name||'').replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
+        <button class="btn-watched-detail${isW ? ' active' : ''}" onclick="toggleWatched({id:'${series.id}', title:'${(series.name||'').replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
           ${isW ? '✔ Watched' : '👁️ Mark as Watched'}
         </button>
       </div>
