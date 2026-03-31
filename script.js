@@ -90,6 +90,14 @@ async function checkUserStatus() {
       if (!spreadsheetId) await findOrCreateSpreadsheet();
       await syncFromSheets('watched');
       await syncFromSheets('wishlist');
+      
+      // Start the "Background Pulse" polled sync every 60s
+      if (!window.syncInterval) {
+        window.syncInterval = setInterval(() => {
+          syncFromSheets('watched');
+          syncFromSheets('wishlist');
+        }, 60000);
+      }
     }
   } catch (e) {
     console.error("Auth check failed", e);
@@ -287,26 +295,39 @@ async function syncFromSheets(listType = 'watched') {
       range: `${config.title}!A2:E`
     });
     const rows = res.result.values;
-    // Always map the rows, defaulting to an empty array if none found
-    const items = rows ? rows.map(r => ({ 
+    // Always map rows, defaulting to an empty array
+    const cloudItems = rows ? rows.map(r => ({ 
       id: String(r[0]), 
       type: String(r[1] || 'movie').toLowerCase() === 'movie' ? 'movie' : 'tv', 
       title: r[2] || 'Untitled', 
       poster_path: r[3] || ''
     })) : [];
     
-    const current = getStorage(listType) || [];
-    // Only update if data has actually changed to prevent flickering
-    if (JSON.stringify(items) !== JSON.stringify(current)) {
-      setStorage(listType, items);
-      if (listType === 'watched' && document.getElementById('watched-movies-grid')) {
-        renderProfilePage();
-      } else if (listType === 'wishlist' && document.getElementById('wishlist-movies-grid')) {
-        renderWishlistPage();
+    // Smart Merge: Don't lose local items that haven't hit the cloud yet
+    const localItems = getStorage(listType) || [];
+    const mergedItems = [...cloudItems];
+    
+    // Add local items that aren't in the cloud yet (prevents "flicker" on slow appends)
+    localItems.forEach(lItem => {
+      if (!mergedItems.some(cItem => String(cItem.id) === String(lItem.id))) {
+        mergedItems.push(lItem);
       }
+    });
+
+    if (JSON.stringify(mergedItems) !== JSON.stringify(localItems)) {
+      setStorage(listType, mergedItems);
+      triggerUIRefresh(listType);
     }
   } catch (e) {
     console.error(`Sheet sync failed (${listType}):`, e);
+  }
+}
+
+function triggerUIRefresh(listType) {
+  if (listType === 'watched' && document.getElementById('watched-movies-grid')) {
+    renderProfilePage();
+  } else if (listType === 'wishlist' && document.getElementById('wishlist-movies-grid')) {
+    renderWishlistPage();
   }
 }
 
@@ -1669,6 +1690,12 @@ document.addEventListener('DOMContentLoaded', () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   }
+
+  // Multi-Tab Sync: Instantly reflect changes made in other tabs
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'watched') triggerUIRefresh('watched');
+    if (e.key === 'wishlist') triggerUIRefresh('wishlist');
+  });
 
   // Global navbar search autocomplete
   const navbarSearchInput = document.querySelector('.navbar .search-form input[name="q"]');
