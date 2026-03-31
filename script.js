@@ -40,12 +40,26 @@ function initializeGisClient() {
         localStorage.setItem('poflix_auth_token', tokenResponse.access_token);
         localStorage.setItem('poflix_auth_expires', Date.now() + (tokenResponse.expires_in * 1000));
         gapi.client.setToken(tokenResponse);
-        checkUserStatus();
+        checkUserStatus().then(() => {
+          if (window.location.pathname.includes('login.html')) {
+            window.location.href = 'profile.html';
+          }
+        });
       }
     },
   });
   gisInited = true;
   maybeStartAuth();
+}
+
+function startGoogleLogin() {
+  if (tokenClient) {
+    const status = document.getElementById('auth-status');
+    if (status) status.innerText = "Waiting for Google authorization...";
+    tokenClient.requestAccessToken();
+  } else {
+    alert("Google Service is still loading. Please wait a second and try again.");
+  }
 }
 
 function maybeStartAuth() {
@@ -58,13 +72,7 @@ function maybeStartAuth() {
       gapi.client.setToken({ access_token: savedToken });
       checkUserStatus();
     } else {
-      // If we just came from the login page, request a fresh token
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('setup') === 'true') {
-        tokenClient.requestAccessToken();
-      } else {
-        updateNavbarAuth();
-      }
+      updateNavbarAuth();
     }
   }
 }
@@ -281,14 +289,28 @@ async function toggleWatched(item, btn) {
   let watched = getWatchedFromStorage();
   const idx = watched.findIndex(i => String(i.id) === String(item.id));
   
+  const isDetailBtn = btn.classList.contains('btn-watched-detail');
+
   if (idx >= 0) {
     watched.splice(idx, 1);
     btn.classList.remove('active');
+    if (isDetailBtn) {
+      btn.innerHTML = '👁️ Mark as Watched';
+      btn.style.background = 'var(--surface)';
+      btn.style.color = 'var(--text-primary)';
+      btn.style.border = '1px solid var(--border-subtle)';
+    }
   } else {
     watched.push(item);
     btn.classList.add('active');
+    if (isDetailBtn) {
+      btn.innerHTML = '✔ Watched';
+      btn.style.background = 'var(--accent)';
+      btn.style.color = '#fff';
+      btn.style.border = '1px solid var(--accent)';
+    }
     if (googleUser && spreadsheetId) {
-      await syncToSheets(item);
+      syncToSheets(item); // removed await for speed, let it sync in bg
     }
   }
   setStorage('watched', watched);
@@ -450,11 +472,7 @@ function createMovieCard(movie) {
     ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
     : '';
   if (!posterUrl) return '';
-  const watchedClass = isWatched(movie.id) ? ' active' : '';
   return `<a href="movie_detail.html?id=${movie.id}" class="animated-card" data-id="${movie.id}">
-    <button class="btn-watched${watchedClass}" onclick="event.preventDefault(); toggleWatched({id:'${movie.id}', title:'${(movie.title||'').replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
-      <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-    </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
     ${rating ? `<span class="card-rating">⭐ ${rating}</span>` : ''}
     <img src="${posterUrl}" alt="${movie.title}" loading="lazy">
@@ -469,11 +487,7 @@ function createSeriesCard(series) {
     ? `https://image.tmdb.org/t/p/w342${series.poster_path}`
     : '';
   if (!posterUrl) return '';
-  const watchedClass = isWatched(series.id) ? ' active' : '';
   return `<a href="series_detail.html?id=${series.id}" class="animated-card" data-id="${series.id}">
-    <button class="btn-watched${watchedClass}" onclick="event.preventDefault(); toggleWatched({id:'${series.id}', title:'${(series.name||'').replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
-      <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-    </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
     ${rating ? `<span class="card-rating">⭐ ${rating}</span>` : ''}
     <img src="${posterUrl}" alt="${series.name}" loading="lazy">
@@ -488,11 +502,7 @@ function createCarouselMovieCard(movie) {
     ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
     : '';
   if (!posterUrl) return '';
-  const watchedClass = isWatched(movie.id) ? ' active' : '';
   return `<a href="movie_detail.html?id=${movie.id}" class="carousel-card" data-id="${movie.id}">
-    <button class="btn-watched${watchedClass}" onclick="event.preventDefault(); toggleWatched({id:'${movie.id}', title:'${(movie.title||'').replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
-      <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-    </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
     ${rating ? `<span class="card-rating">⭐ ${rating}</span>` : ''}
     <img src="${posterUrl}" alt="${movie.title}" loading="lazy">
@@ -507,11 +517,7 @@ function createCarouselSeriesCard(series) {
     ? `https://image.tmdb.org/t/p/w342${series.poster_path}`
     : '';
   if (!posterUrl) return '';
-  const watchedClass = isWatched(series.id) ? ' active' : '';
   return `<a href="series_detail.html?id=${series.id}" class="carousel-card" data-id="${series.id}">
-    <button class="btn-watched${watchedClass}" onclick="event.preventDefault(); toggleWatched({id:'${series.id}', title:'${(series.name||'').replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
-      <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-    </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
     ${rating ? `<span class="card-rating">⭐ ${rating}</span>` : ''}
     <img src="${posterUrl}" alt="${series.name}" loading="lazy">
@@ -896,6 +902,8 @@ async function renderMovieDetail() {
 
     // Info
     const genrePills = (movie.genres || []).map(g => `<span class="badge">${g.name}</span>`).join('');
+    const isW = isWatched(movie.id);
+    const wBtnStyle = isW ? 'background:var(--accent);color:#fff;border:1px solid var(--accent);' : 'background:var(--surface);color:var(--text-primary);border:1px solid var(--border-subtle);';
     infoCard.innerHTML = `
       <div class="movie-title-main">${movie.title}</div>
       <div class="movie-meta">
@@ -904,7 +912,12 @@ async function renderMovieDetail() {
         <span>${movie.vote_count || 0} votes</span>
         <span>${movie.runtime ? movie.runtime + ' min' : ''}</span>
       </div>
-      <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">${genrePills}</div>
+      <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:1.5rem;">${genrePills}</div>
+      <div style="margin-bottom:1.5rem;">
+        <button class="btn-login-nav btn-watched-detail${isW ? ' active' : ''}" style="${wBtnStyle}" onclick="toggleWatched({id:'${movie.id}', title:'${(movie.title||'').replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
+          ${isW ? '✔ Watched' : '👁️ Mark as Watched'}
+        </button>
+      </div>
       <div class="movie-overview">${movie.overview || ''}</div>
     `;
 
@@ -1016,6 +1029,8 @@ async function renderSeriesDetail() {
 
     // Info
     const genrePills = (series.genres || []).map(g => `<span class="badge">${g.name}</span>`).join('');
+    const isW = isWatched(series.id);
+    const wBtnStyle = isW ? 'background:var(--accent);color:#fff;border:1px solid var(--accent);' : 'background:var(--surface);color:var(--text-primary);border:1px solid var(--border-subtle);';
     infoCard.innerHTML = `
       <div class="series-title-main">${series.name}</div>
       <div class="series-meta">
@@ -1024,7 +1039,12 @@ async function renderSeriesDetail() {
         <span>${series.vote_count || 0} votes</span>
         <span>${series.number_of_seasons || '?'} Season${(series.number_of_seasons||0) !== 1 ? 's' : ''}</span>
       </div>
-      <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">${genrePills}</div>
+      <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:1.5rem;">${genrePills}</div>
+      <div style="margin-bottom:1.5rem;">
+        <button class="btn-login-nav btn-watched-detail${isW ? ' active' : ''}" style="${wBtnStyle}" onclick="toggleWatched({id:'${series.id}', title:'${(series.name||'').replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
+          ${isW ? '✔ Watched' : '👁️ Mark as Watched'}
+        </button>
+      </div>
       <div class="series-overview">${series.overview || ''}</div>
     `;
 

@@ -83,23 +83,9 @@
       </div>
 
       <div class="login-actions">
-        <div id="g_id_onload"
-             data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
-             data-context="signin"
-             data-ux_mode="popup"
-             data-callback="handleCredentialResponse"
-             data-auto_prompt="false">
-        </div>
-
-        <div class="g_id_signin"
-             data-type="standard"
-             data-shape="pill"
-             data-theme="filled_black"
-             data-text="signin_with"
-             data-size="large"
-             data-logo_alignment="left">
-        </div>
-        
+        <button class="btn-login-nav" onclick="startGoogleLogin()" style="padding: 0.8rem 2rem; font-size: 1.1rem;">
+          Sign in with Google
+        </button>
         <div id="auth-status"></div>
       </div>
 
@@ -109,29 +95,7 @@
     </div>
   </main>
 
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="config.js"></script>
-  <script>
-    // Update client ID if configured in config.js
-    document.getElementById('g_id_onload').setAttribute('data-client_id', GOOGLE_CLIENT_ID);
-
-    function handleCredentialResponse(response) {
-      if (response.credential) {
-        // Here we'd normally verify the JWT on a backend.
-        // For our static site, we'll store the token (temporarily) and redirect.
-        // We actually need the OAuth 2.0 Access Token for Sheets, which comes via a different flow.
-        // We'll trigger the gapi client initialization in script.js on the profile page.
-        
-        localStorage.setItem('poflix_google_token', response.credential);
-        const status = document.getElementById('auth-status');
-        status.innerText = "Signing in...";
-        
-        // Redirect to profile to finish setup
-        setTimeout(() => {
-          window.location.href = 'profile.html?setup=true';
-        }, 800);
-      }
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
