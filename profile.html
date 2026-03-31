@@ -45,15 +45,7 @@
         <div class="profile-empty">Loading your history from Google Sheets...</div>
       </div>
 
-      <h4>❤️ Favorite Movies</h4>
-      <div class="profile-grid" id="fav-movies-grid">
-        <div class="profile-empty">No favorite movies yet.</div>
-      </div>
 
-      <h4>📺 Favorite Series</h4>
-      <div class="profile-grid" id="fav-series-grid">
-        <div class="profile-empty">No favorite series yet.</div>
-      </div>
     </div>
   </main>
 
@@ -93,17 +85,7 @@
         }
       }
 
-      const favMovies = getStorage('fav-movies');
-      const favGrid = document.getElementById('fav-movies-grid');
-      if (favGrid && favMovies.length > 0) {
-        favGrid.innerHTML = favMovies.map(createMovieCard).join('');
-      }
 
-      const favSeries = getStorage('fav-series'); // Assuming this exists or similar
-      const fsGrid = document.getElementById('fav-series-grid');
-      if (fsGrid && favSeries && favSeries.length > 0) {
-        fsGrid.innerHTML = favSeries.map(createSeriesCard).join('');
-      }
     }
     
     // Periodically refresh if sheet sync is slow

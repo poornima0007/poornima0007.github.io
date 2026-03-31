@@ -1341,18 +1341,16 @@ if (document.getElementById('series-poster-card')) {
 // Profile Page — Load from localStorage
 // ============================================
 function renderProfilePage() {
-  const favMoviesGrid = document.getElementById('fav-movies-grid');
-  const favSeriesGrid = document.getElementById('fav-series-grid');
   const watchlistMoviesGrid = document.getElementById('watchlist-movies-grid');
   const watchlistSeriesGrid = document.getElementById('watchlist-series-grid');
-  if (!favMoviesGrid) return;
+  
+  if (!watchlistMoviesGrid && !watchlistSeriesGrid) return;
 
-  const favMovies = getStorage('fav-movies');
-  const favSeries = getStorage('fav-series');
   const wlMovies = getStorage('watchlist-movies');
   const wlSeries = getStorage('watchlist-series');
 
   const renderGrid = (grid, items, cardFn, emptyMsg) => {
+    if (!grid) return;
     if (items.length > 0) {
       grid.innerHTML = items.map(cardFn).join('');
       observeCards(grid);
@@ -1361,13 +1359,11 @@ function renderProfilePage() {
     }
   };
 
-  renderGrid(favMoviesGrid, favMovies, createMovieCard, 'No favorite movies yet. Browse and add some!');
-  renderGrid(favSeriesGrid, favSeries, createSeriesCard, 'No favorite series yet. Browse and add some!');
   renderGrid(watchlistMoviesGrid, wlMovies, createMovieCard, 'Your movie watchlist is empty. Start adding!');
   renderGrid(watchlistSeriesGrid, wlSeries, createSeriesCard, 'Your series watchlist is empty. Start adding!');
 }
 
-if (document.getElementById('fav-movies-grid')) {
+if (document.getElementById('watchlist-movies-grid') || document.getElementById('watched-grid')) {
   loadGenreMaps().then(() => renderProfilePage());
 }
 
