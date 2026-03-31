@@ -1707,8 +1707,8 @@ if (document.getElementById('stats-dashboard')) {
   renderStatsDashboard();
 }
 
-// --- Surprise Me Logic ---
-async function surpriseMe() {
+// --- Dice Logic (Random Discovery) ---
+async function rollDice() {
   try {
     const randomPage = Math.floor(Math.random() * 5) + 1;
     const data = await fetchTMDB('/movie/top_rated', { page: randomPage });
@@ -1717,7 +1717,7 @@ async function surpriseMe() {
     const randomMovie = movies[Math.floor(Math.random() * movies.length)];
     window.location.href = `movie_detail.html?id=${randomMovie.id}`;
   } catch (e) {
-    alert("Discovery is taking a break. Try again in a second!");
+    alert("The dice are rolling a bit slow. Try again!");
   }
 }
 
@@ -1765,16 +1765,10 @@ document.addEventListener('DOMContentLoaded', () => {
       nav.classList.toggle('open');
     });
     
-    // Ensure "Surprise Me" exists in the navbar dynamically
+    // Ensure "Dice" exists in the navbar dynamically
     if (!nav.querySelector('.surprise-link')) {
       const li = document.createElement('li');
-      li.innerHTML = `
-        <a href="#" onclick="event.preventDefault(); surpriseMe();" class="surprise-link" title="Surprise Me">
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="dice-icon">
-            <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
-            <path d="M12 12h.01"/><path d="M16 8h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/><path d="M8 8h.01"/>
-          </svg>
-        </a>`;
+      li.innerHTML = '<a href="#" onclick="event.preventDefault(); rollDice();" class="surprise-link">🎲 Dice</a>';
       nav.appendChild(li);
     }
   }
