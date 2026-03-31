@@ -1763,12 +1763,14 @@ document.addEventListener('DOMContentLoaded', () => {
     toggle.addEventListener('click', () => {
       toggle.classList.toggle('open');
       nav.classList.toggle('open');
+      const navbarElem = document.querySelector('.navbar');
+      if (navbarElem) navbarElem.classList.toggle('open');
     });
     
     // Ensure "Dice" exists in the navbar dynamically
     if (!nav.querySelector('.surprise-link')) {
       const li = document.createElement('li');
-      li.innerHTML = '<a href="#" onclick="event.preventDefault(); rollDice();" class="surprise-link">🎲</a>';
+      li.innerHTML = '<a href="#" onclick="event.preventDefault(); rollDice();" class="surprise-link">🎲 Dice</a>';
       nav.appendChild(li);
     }
   }

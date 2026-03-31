@@ -1605,6 +1605,11 @@ footer {
   }
   .navbar-nav.open {
     display: flex;
+    padding-bottom: 2rem;
+  }
+  .navbar.open {
+    padding-bottom: 0.5rem;
+    border-radius: 28px; /* Switch from capsule to rounded rect when open */
   }
   .navbar-nav li a {
     display: block;
