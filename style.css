@@ -1872,10 +1872,23 @@ footer {
   pointer-events: none;
   transform: translateY(-5px);
 }
-.btn-watched.active {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(0);
+/* Remove permanent visibility, it only shows on hover now */
+
+/* Beautiful Red Backlight Glow for Watched Cards */
+.animated-card.watched-glow, .carousel-card.watched-glow {
+  box-shadow: 0 0 30px rgba(255, 77, 109, 0.35);
+  border: 1px solid rgba(255, 77, 109, 0.5);
+  transition: all var(--transition-medium);
+}
+.animated-card.watched-glow::before, .carousel-card.watched-glow::before {
+  content: "";
+  position: absolute;
+  top: -2px; left: -2px; right: -2px; bottom: -2px;
+  background: var(--accent);
+  z-index: -1;
+  border-radius: inherit;
+  filter: blur(8px);
+  opacity: 0.15;
 }
 .animated-card:hover .btn-watched, .carousel-card:hover .btn-watched {
   opacity: 1;

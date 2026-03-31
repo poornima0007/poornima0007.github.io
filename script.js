@@ -290,10 +290,12 @@ async function toggleWatched(item, btn) {
   const idx = watched.findIndex(i => String(i.id) === String(item.id));
   
   const isDetailBtn = btn.classList.contains('btn-watched-detail');
+  const card = btn.closest('.animated-card, .carousel-card');
 
   if (idx >= 0) {
     watched.splice(idx, 1);
     btn.classList.remove('active');
+    if (card) card.classList.remove('watched-glow');
     if (isDetailBtn) {
       btn.innerHTML = '👁️ Mark as Watched';
       btn.style.background = 'var(--surface)';
@@ -303,6 +305,7 @@ async function toggleWatched(item, btn) {
   } else {
     watched.push(item);
     btn.classList.add('active');
+    if (card) card.classList.add('watched-glow');
     if (isDetailBtn) {
       btn.innerHTML = '✔ Watched';
       btn.style.background = 'var(--accent)';
@@ -472,9 +475,11 @@ function createMovieCard(movie) {
     ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
     : '';
   if (!posterUrl) return '';
-  const watchedClass = isWatched(movie.id) ? ' active' : '';
-  return `<a href="movie_detail.html?id=${movie.id}" class="animated-card" data-id="${movie.id}">
-    <button class="btn-watched${watchedClass}" onclick="event.preventDefault(); toggleWatched({id:'${movie.id}', title:'${(movie.title||'').replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
+  const isW = isWatched(movie.id);
+  const watchedBtnClass = isW ? ' active' : '';
+  const watchedCardClass = isW ? ' watched-glow' : '';
+  return `<a href="movie_detail.html?id=${movie.id}" class="animated-card${watchedCardClass}" data-id="${movie.id}">
+    <button class="btn-watched${watchedBtnClass}" onclick="event.preventDefault(); toggleWatched({id:'${movie.id}', title:'${(movie.title||'').replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
       <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
     </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
@@ -491,9 +496,11 @@ function createSeriesCard(series) {
     ? `https://image.tmdb.org/t/p/w342${series.poster_path}`
     : '';
   if (!posterUrl) return '';
-  const watchedClass = isWatched(series.id) ? ' active' : '';
-  return `<a href="series_detail.html?id=${series.id}" class="animated-card" data-id="${series.id}">
-    <button class="btn-watched${watchedClass}" onclick="event.preventDefault(); toggleWatched({id:'${series.id}', title:'${(series.name||'').replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
+  const isW = isWatched(series.id);
+  const watchedBtnClass = isW ? ' active' : '';
+  const watchedCardClass = isW ? ' watched-glow' : '';
+  return `<a href="series_detail.html?id=${series.id}" class="animated-card${watchedCardClass}" data-id="${series.id}">
+    <button class="btn-watched${watchedBtnClass}" onclick="event.preventDefault(); toggleWatched({id:'${series.id}', title:'${(series.name||'').replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
       <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
     </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
@@ -510,9 +517,11 @@ function createCarouselMovieCard(movie) {
     ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
     : '';
   if (!posterUrl) return '';
-  const watchedClass = isWatched(movie.id) ? ' active' : '';
-  return `<a href="movie_detail.html?id=${movie.id}" class="carousel-card" data-id="${movie.id}">
-    <button class="btn-watched${watchedClass}" onclick="event.preventDefault(); toggleWatched({id:'${movie.id}', title:'${(movie.title||'').replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
+  const isW = isWatched(movie.id);
+  const watchedBtnClass = isW ? ' active' : '';
+  const watchedCardClass = isW ? ' watched-glow' : '';
+  return `<a href="movie_detail.html?id=${movie.id}" class="carousel-card${watchedCardClass}" data-id="${movie.id}">
+    <button class="btn-watched${watchedBtnClass}" onclick="event.preventDefault(); toggleWatched({id:'${movie.id}', title:'${(movie.title||'').replace(/'/g,"\\'")}', poster_path:'${movie.poster_path}', type:'movie'}, this)">
       <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
     </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
@@ -529,9 +538,11 @@ function createCarouselSeriesCard(series) {
     ? `https://image.tmdb.org/t/p/w342${series.poster_path}`
     : '';
   if (!posterUrl) return '';
-  const watchedClass = isWatched(series.id) ? ' active' : '';
-  return `<a href="series_detail.html?id=${series.id}" class="carousel-card" data-id="${series.id}">
-    <button class="btn-watched${watchedClass}" onclick="event.preventDefault(); toggleWatched({id:'${series.id}', title:'${(series.name||'').replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
+  const isW = isWatched(series.id);
+  const watchedBtnClass = isW ? ' active' : '';
+  const watchedCardClass = isW ? ' watched-glow' : '';
+  return `<a href="series_detail.html?id=${series.id}" class="carousel-card${watchedCardClass}" data-id="${series.id}">
+    <button class="btn-watched${watchedBtnClass}" onclick="event.preventDefault(); toggleWatched({id:'${series.id}', title:'${(series.name||'').replace(/'/g,"\\'")}', poster_path:'${series.poster_path}', type:'tv'}, this)">
       <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
     </button>
     ${year ? `<span class="card-year">${year}</span>` : ''}
