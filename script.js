@@ -359,12 +359,20 @@ function filterAdultContent(items) {
 }
 
 // --- TMDb API Helper ---
+const tmdbCache = new Map();
+
 async function fetchTMDB(endpoint, params = {}) {
-  params['api_key'] = TMDB_API_KEY;
-  const url = `${TMDB_BASE_URL}${endpoint}?` + new URLSearchParams(params).toString();
+  const queryParams = new URLSearchParams(params);
+  queryParams.set('api_key', TMDB_API_KEY);
+  const url = `${TMDB_BASE_URL}${endpoint}?${queryParams.toString()}`;
+
+  if (tmdbCache.has(url)) return tmdbCache.get(url);
+
   const res = await fetch(url);
   if (!res.ok) throw new Error('TMDb API error');
-  return res.json();
+  const data = await res.json();
+  tmdbCache.set(url, data);
+  return data;
 }
 
 // --- Genre Cache ---
@@ -429,11 +437,11 @@ async function toggleWatched(item, btn) {
 
   if (idx >= 0) {
     watched.splice(idx, 1);
+    setStorage('watched', watched);
     btn.classList.remove('active');
     if (card) card.classList.remove('watched-glow');
-    if (isDetailBtn) {
-      btn.innerHTML = '👁️ Mark as Watched';
-    }
+    if (isDetailBtn) btn.innerHTML = '👁️ Mark as Watched';
+    triggerUIRefresh('watched');
     if (googleUser) removeFromSheets(item.id, 'watched'); 
   } else {
     watched.push(item);
@@ -460,13 +468,13 @@ async function toggleWishlist(item, btn) {
 
   if (idx >= 0) {
     wishlist.splice(idx, 1);
+    setStorage('wishlist', wishlist);
     btn.classList.remove('active');
     if (isDetailBtn) {
-      btn.innerHTML = '🔖 Add to Wishlist';
-    } else if (btn.querySelector('.icon-bookmark')) {
-       btn.querySelector('.icon-bookmark').textContent = '🔖';
+      btn.innerHTML = '<i class="fas fa-bookmark" style="margin-right:8px;"></i> Watch Later';
     }
-    if (googleUser) removeFromSheets(item.id, 'wishlist');
+    triggerUIRefresh('wishlist');
+    if (googleUser) removeFromSheets(item.id, 'wishlist'); 
   } else {
     wishlist.push(item);
     btn.classList.add('active');
@@ -920,29 +928,18 @@ async function renderMoviesList(params = {}, page = 1) {
       return filtered.filter(m => { if (seen.has(m.id)) return false; seen.add(m.id); return true; });
     };
 
-    // Await Page 1 First
-    const d1 = await p1;
+    // Parallel fetch for Page 1 and Page 2
+    const [d1, d2] = await Promise.all([p1, p2]);
+    
     totalPages = Math.ceil((d1.total_results || 0) / ITEMS_PER_PAGE);
     const results1 = processResults(d1);
+    const results2 = processResults(d2);
 
-    if (results1.length > 0) {
-      grid.innerHTML = results1.map(createMovieCard).join('');
+    if (results1.length > 0 || results2.length > 0) {
+      grid.innerHTML = [...results1, ...results2].map(createMovieCard).join('');
       observeCards(grid);
     } else {
       grid.innerHTML = '<div style="color:var(--accent);padding:2rem;">No movies found.</div>';
-    }
-
-    // Await Page 2 in Background and Append
-    const d2 = await p2;
-    const results2 = processResults(d2);
-    
-    if (results2.length > 0) {
-      if (results1.length === 0) {
-        grid.innerHTML = results2.map(createMovieCard).join('');
-      } else {
-        grid.insertAdjacentHTML('beforeend', results2.map(createMovieCard).join(''));
-      }
-      observeCards(grid);
     }
 
     moviesTotalPages = totalPages;
@@ -1029,29 +1026,18 @@ async function renderSeriesList(params = {}, page = 1) {
       return filtered.filter(s => { if (seen.has(s.id)) return false; seen.add(s.id); return true; });
     };
 
-    // Await Page 1 First
-    const d1 = await p1;
+    // Parallel fetch for Page 1 and Page 2
+    const [d1, d2] = await Promise.all([p1, p2]);
+    
     totalPages = Math.ceil((d1.total_results || 0) / ITEMS_PER_PAGE);
     const results1 = processResults(d1);
+    const results2 = processResults(d2);
 
-    if (results1.length > 0) {
-      grid.innerHTML = results1.map(createSeriesCard).join('');
+    if (results1.length > 0 || results2.length > 0) {
+      grid.innerHTML = [...results1, ...results2].map(createSeriesCard).join('');
       observeCards(grid);
     } else {
       grid.innerHTML = '<div style="color:var(--accent);padding:2rem;">No series found.</div>';
-    }
-
-    // Await Page 2 in Background and Append
-    const d2 = await p2;
-    const results2 = processResults(d2);
-
-    if (results2.length > 0) {
-      if (results1.length === 0) {
-        grid.innerHTML = results2.map(createSeriesCard).join('');
-      } else {
-        grid.insertAdjacentHTML('beforeend', results2.map(createSeriesCard).join(''));
-      }
-      observeCards(grid);
     }
 
     seriesTotalPages = totalPages;
