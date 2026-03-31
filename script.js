@@ -287,14 +287,23 @@ async function syncFromSheets(listType = 'watched') {
       range: `${config.title}!A2:E`
     });
     const rows = res.result.values;
-    if (rows) {
-      const items = rows.map(r => ({ 
-        id: r[0], 
-        type: String(r[1]).toLowerCase() === 'movie' ? 'movie' : 'tv', 
-        title: r[2], 
-        poster_path: r[3] 
-      }));
+    const items = rows ? rows.map(r => ({ 
+      id: String(r[0]), 
+      type: String(r[1]).toLowerCase() === 'movie' ? 'movie' : 'tv', 
+      title: r[2], 
+      poster_path: r[3] 
+    })) : [];
+    
+    // Compare with current local storage to avoid unnecessary UI redraws
+    const current = getStorage(listType) || [];
+    if (JSON.stringify(items) !== JSON.stringify(current)) {
       setStorage(listType, items);
+      // Trigger a silent UI update if we're on the relevant page
+      if (listType === 'watched' && document.getElementById('watched-movies-grid')) {
+        renderProfilePage();
+      } else if (listType === 'wishlist' && document.getElementById('wishlist-movies-grid')) {
+        renderWishlistPage();
+      }
     }
   } catch (e) { console.error(`Sheet read failed (${listType})`, e); }
 }
@@ -450,19 +459,27 @@ async function toggleWishlist(item, btn) {
 
 function removeFromWishlistIfPresent(id) {
   let wishlist = getStorage('wishlist') || [];
-  const idx = wishlist.findIndex(i => String(i.id) === String(id));
+  const sId = String(id);
+  const idx = wishlist.findIndex(i => String(i.id) === sId);
   if (idx >= 0) {
     wishlist.splice(idx, 1);
     setStorage('wishlist', wishlist);
-    if (googleUser) removeFromSheets(id, 'wishlist');
+    if (googleUser) removeFromSheets(sId, 'wishlist');
     
-    // Find any wishlist buttons on the page and update them
-    document.querySelectorAll(`[data-wishlist-id="${id}"]`).forEach(btn => {
+    // Smoothly update UI elements without a refresh
+    document.querySelectorAll(`[data-wishlist-id="${sId}"]`).forEach(btn => {
       btn.classList.remove('active');
       if (btn.classList.contains('btn-wishlist-detail')) {
         btn.innerHTML = '🔖 Add to Wishlist';
+      } else if (btn.querySelector('.icon-bookmark')) {
+        btn.querySelector('.icon-bookmark').textContent = '🔖';
       }
     });
+
+    // If we're on the wishlist page, and there are no movies/series left, re-render
+    if (document.getElementById('wishlist-movies-grid')) {
+      renderWishlistPage();
+    }
   }
 }
 
@@ -1560,11 +1577,14 @@ function renderWishlistPage() {
   renderGrid(wishlistSeriesGrid, wishlistSeries, createSeriesCard, 'Your series wishlist is empty. Start adding!');
 }
 
+// --- Instant Page Loading (Render from cache first) ---
 if (document.getElementById('watched-movies-grid')) {
-  loadGenreMaps().then(() => renderProfilePage());
+  renderProfilePage(); // Show cached results immediately
+  loadGenreMaps().then(() => renderProfilePage()); // Update genres if map was loading
 }
 if (document.getElementById('wishlist-movies-grid')) {
-  loadGenreMaps().then(() => renderWishlistPage());
+  renderWishlistPage(); // Show cached results immediately
+  loadGenreMaps().then(() => renderWishlistPage()); // Update genres if map was loading
 }
 
 // ============================================
