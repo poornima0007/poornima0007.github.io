@@ -1865,6 +1865,24 @@ footer {
   display: block;
 }
 
+/* Hide Watched toggle by default to keep grids clean,
+   Reveal it purely on hover or if already active. */
+.btn-watched {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-5px);
+}
+.btn-watched.active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+.animated-card:hover .btn-watched, .carousel-card:hover .btn-watched {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
 /* Tooltip for the button */
 .btn-watched::after {
   content: "Mark Watched";
