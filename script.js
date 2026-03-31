@@ -141,13 +141,12 @@ function updateNavbarAuth() {
     authLink.innerHTML = `
       <div class="nav-auth-group">
         <a href="profile.html" class="nav-user" title="Go to Profile">
-          <img src="${googleUser.picture}" alt="User">
-          ${firstName}
+          <img src="${googleUser.picture}" alt="User Profile">
+          <span>${firstName}</span>
         </a>
-        <button onclick="logout()" class="btn-logout-nav">
-          Logout
+        <button onclick="logout()" class="btn-logout-nav" title="Logout">
+          <svg viewBox="0 0 24 24" width="16" height="16"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
         </button>
-        <a href="#" onclick="event.preventDefault(); surpriseMe();" class="surprise-link">✨ Surprise Me</a>
       </div>
     `;
   } else {
@@ -1767,10 +1766,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (navbarElem) navbarElem.classList.toggle('open');
     });
     
-    // Ensure "Dice" exists in the navbar dynamically
+    // Ensure "Dice" icon exists in the navbar dynamically
     if (!nav.querySelector('.surprise-link')) {
       const li = document.createElement('li');
-      li.innerHTML = '<a href="#" onclick="event.preventDefault(); rollDice();" class="surprise-link">🎲 Dice</a>';
+      li.innerHTML = '<a href="#" onclick="event.preventDefault(); rollDice();" class="surprise-link" title="Roll Dice">🎲</a>';
       nav.appendChild(li);
     }
   }
