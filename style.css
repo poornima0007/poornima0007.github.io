@@ -1446,9 +1446,8 @@ footer {
    Profile Page
    ============================================ */
 .profile-section {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 0 clamp(1rem, 3vw, 2rem) 2rem;
+  width: 100%;
+  padding: 0 clamp(1rem, 3vw, 2rem) 3rem;
 }
 .profile-section h4 {
   font-size: 1.1rem;
@@ -1461,8 +1460,8 @@ footer {
 }
 .profile-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+  gap: 1.5rem;
 }
 .profile-empty {
   color: var(--text-muted);
