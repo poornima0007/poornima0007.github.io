@@ -977,7 +977,15 @@ async function renderMoviesList(params = {}, page = 1) {
         sort_by: params.sort || 'popularity.desc' 
       };
       if (params.year) discoverParams.primary_release_year = params.year;
-      if (params.genre) discoverParams.with_genres = params.genre;
+      
+      if (params.genre) {
+        if (params.genre.startsWith('kw_')) {
+          discoverParams.with_keywords = params.genre.replace('kw_', '');
+        } else {
+          discoverParams.with_genres = params.genre;
+        }
+      }
+      
       p1 = fetchTMDB('/discover/movie', { ...discoverParams, page: tmdbPage1 });
       p2 = fetchTMDB('/discover/movie', { ...discoverParams, page: tmdbPage2 });
     }
@@ -1029,6 +1037,17 @@ async function populateGenreDropdown() {
       const opt = document.createElement('option');
       opt.value = g.id;
       opt.textContent = g.name;
+      select.appendChild(opt);
+    });
+    // Add Custom Keyword Genres
+    const custom = [
+      { id: 'kw_9748', name: 'Gore' },
+      { id: 'kw_15011', name: 'Disaster' }
+    ];
+    custom.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.name;
       select.appendChild(opt);
     });
   } catch { /* silent */ }
@@ -1086,7 +1105,15 @@ async function renderSeriesList(params = {}, page = 1) {
         sort_by: params.sort || 'popularity.desc' 
       };
       if (params.year) discoverParams.first_air_date_year = params.year;
-      if (params.genre) discoverParams.with_genres = params.genre;
+      
+      if (params.genre) {
+        if (params.genre.startsWith('kw_')) {
+          discoverParams.with_keywords = params.genre.replace('kw_', '');
+        } else {
+          discoverParams.with_genres = params.genre;
+        }
+      }
+      
       p1 = fetchTMDB('/discover/tv', { ...discoverParams, page: tmdbPage1 });
       p2 = fetchTMDB('/discover/tv', { ...discoverParams, page: tmdbPage2 });
     }
@@ -1130,6 +1157,17 @@ async function populateSeriesGenreDropdown() {
       const opt = document.createElement('option');
       opt.value = g.id;
       opt.textContent = g.name;
+      select.appendChild(opt);
+    });
+    // Add Custom Keyword Genres
+    const custom = [
+      { id: 'kw_9748', name: 'Gore' },
+      { id: 'kw_15011', name: 'Disaster' }
+    ];
+    custom.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.name;
       select.appendChild(opt);
     });
   } catch { /* silent */ }
