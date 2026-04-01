@@ -44,19 +44,30 @@
     <!-- Stats Dashboard -->
     <div id="stats-dashboard" class="stats-container"></div>
 
+    <!-- Toggle Selector (Stats Style) -->
+    <div class="profile-toggle-container">
+      <div class="toggle-grid">
+        <div class="toggle-card active" data-type="movies">
+          <div class="toggle-icon">🎞️</div>
+          <div class="toggle-label">Watched Movies</div>
+        </div>
+        <div class="toggle-card" data-type="series">
+          <div class="toggle-icon">📺</div>
+          <div class="toggle-label">Watched Series</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Unified Watched Content Section -->
     <section class="profile-section">
-      <h2 class="section-title">🎞️ Watched Movies</h2>
-      <div class="profile-grid" id="watched-movies-grid">
+      <div class="profile-grid active" id="profile-movies-grid">
+        <div class="profile-empty">Loading your history from Google Sheets...</div>
+      </div>
+      <div class="profile-grid" id="profile-series-grid" style="display: none;">
         <div class="profile-empty">Loading your history from Google Sheets...</div>
       </div>
     </section>
 
-    <section class="profile-section">
-      <h2 class="section-title">📺 Watched Series</h2>
-      <div class="profile-grid" id="watched-series-grid">
-        <div class="profile-empty">Loading your history from Google Sheets...</div>
-      </div>
-    </section>
   </main>
 
   <footer>

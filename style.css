@@ -1618,38 +1618,77 @@ footer {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* --- Stats Dashboard --- */
-.stats-container {
-  margin: 1.5rem 0 3rem;
-  padding: 0 1rem;
+/* --- Stats Dashboard & Toggles --- */
+.stats-container,
+.profile-toggle-container {
+  margin: 1.5rem 0;
+  padding: 0 clamp(1rem, 3vw, 2rem);
 }
-.stats-grid {
+.stats-grid,
+.toggle-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.5rem;
 }
-.stat-card {
+.stat-card,
+.toggle-card {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-lg);
-  padding: 2rem 1.5rem;
+  padding: 1.8rem 1.5rem;
   text-align: center;
   backdrop-filter: blur(10px);
-  transition: transform 0.3s ease, border-color 0.3s ease;
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.4s var(--ease-out);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
 }
-.stat-card:hover {
-  transform: translateY(-5px);
+
+.stat-card::before,
+.toggle-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, var(--accent-soft), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.stat-card:hover,
+.toggle-card:hover {
+  transform: translateY(-8px);
   border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
 }
-.stat-value {
-  font-size: 2rem;
+
+.stat-card:hover::before,
+.toggle-card:hover::before,
+.toggle-card.active::before {
+  opacity: 1;
+}
+
+.toggle-card.active {
+  border-color: var(--accent);
+  background: rgba(var(--accent-rgb, 255, 77, 109), 0.08);
+  box-shadow: 0 0 25px var(--accent-glow);
+  transform: translateY(-4px) scale(1.02);
+}
+
+.stat-value,
+.toggle-icon {
+  font-size: 2.2rem;
   font-weight: 800;
   color: var(--accent);
   margin-bottom: 0.5rem;
   font-family: 'Outfit', sans-serif;
 }
-.stat-label {
-  font-size: 0.85rem;
+
+.stat-label,
+.toggle-label {
+  font-size: 0.9rem;
+  font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 1px;

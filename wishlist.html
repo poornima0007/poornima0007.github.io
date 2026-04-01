@@ -35,22 +35,33 @@
   <main id="main-content">
     <div class="page-header">
       <h1 class="accent">My Wishlist</h1>
-      <p>Movies and series you've saved for later.</p>
+      <p>Save movies and series you want to watch later.</p>
     </div>
 
+    <!-- Toggle Selector (Stats Style) -->
+    <div class="profile-toggle-container">
+      <div class="toggle-grid">
+        <div class="toggle-card active" data-type="movies">
+          <div class="toggle-icon">🎞️</div>
+          <div class="toggle-label">Movie Wishlist</div>
+        </div>
+        <div class="toggle-card" data-type="series">
+          <div class="toggle-icon">📺</div>
+          <div class="toggle-label">Series Wishlist</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Unified Wishlist Content Section -->
     <section class="profile-section">
-      <h2 class="section-title">🔖 Watch Later: Movies</h2>
-      <div class="profile-grid" id="wishlist-movies-grid">
-        <div class="profile-empty">Loading your wishlist...</div>
+      <div class="profile-grid active" id="wishlist-movies-grid">
+        <div class="profile-empty">Your movie wishlist is empty. Start adding!</div>
+      </div>
+      <div class="profile-grid" id="wishlist-series-grid" style="display: none;">
+        <div class="profile-empty">Your series wishlist is empty. Start adding!</div>
       </div>
     </section>
 
-    <section class="profile-section">
-      <h2 class="section-title">📌 Watch Later: Series</h2>
-      <div class="profile-grid" id="wishlist-series-grid">
-        <div class="profile-empty">Loading your wishlist...</div>
-      </div>
-    </section>
   </main>
 
   <footer>

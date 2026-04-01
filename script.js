@@ -1658,14 +1658,12 @@ if (document.getElementById('series-poster-card')) {
 // ============================================
 // Profile Page — Load from localStorage
 // ============================================
-// ============================================
-// Profile Page — Load from localStorage
-// ============================================
 function renderProfilePage() {
-  const watchedMoviesGrid = document.getElementById('watched-movies-grid');
-  const watchedSeriesGrid = document.getElementById('watched-series-grid');
+  const watchedMoviesGrid = document.getElementById('profile-movies-grid');
+  const watchedSeriesGrid = document.getElementById('profile-series-grid');
   
   if (!watchedMoviesGrid && !watchedSeriesGrid) return;
+  initProfileToggles('profile');
 
   try {
     const watched = getStorage('watched') || [];
@@ -1689,11 +1687,41 @@ function renderProfilePage() {
   }
 }
 
+function initProfileToggles(pageType) {
+  const toggles = document.querySelectorAll('.toggle-card');
+  if (toggles.length === 0) return;
+
+  toggles.forEach(card => {
+    card.onclick = () => {
+      const type = card.dataset.type;
+      
+      // Update UI state
+      toggles.forEach(t => t.classList.remove('active'));
+      card.classList.add('active');
+
+      // Swap visibility
+      const moviesGrid = document.getElementById(`${pageType}-movies-grid`);
+      const seriesGrid = document.getElementById(`${pageType}-series-grid`);
+
+      if (type === 'movies') {
+        moviesGrid.style.display = 'grid';
+        seriesGrid.style.display = 'none';
+        observeCards(moviesGrid);
+      } else {
+        moviesGrid.style.display = 'none';
+        seriesGrid.style.display = 'grid';
+        observeCards(seriesGrid);
+      }
+    };
+  });
+}
+
 function renderWishlistPage() {
   const wishlistMoviesGrid = document.getElementById('wishlist-movies-grid');
   const wishlistSeriesGrid = document.getElementById('wishlist-series-grid');
   
   if (!wishlistMoviesGrid && !wishlistSeriesGrid) return;
+  initProfileToggles('wishlist');
 
   try {
     const wishlist = getStorage('wishlist') || [];
@@ -1718,7 +1746,7 @@ function renderWishlistPage() {
 }
 
 // --- Instant Page Loading (Render from cache first) ---
-if (document.getElementById('watched-movies-grid')) {
+if (document.getElementById('profile-movies-grid')) {
   renderProfilePage(); // Show cached results immediately
   loadGenreMaps().then(() => renderProfilePage()); // Update genres if map was loading
 }
