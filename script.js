@@ -1366,7 +1366,7 @@ async function renderSeriesDetail() {
 
       const seriesStreamUrls = [
         `https://vidsrc.xyz/embed/tv/${seriesId}/${season.season_number}/${currentEpisode}`,
-        `https://vidsrc.online/embed/tv/${seriesId}/${season.season_number}/${currentEpisode}`,
+        `https://moviesapi.club/tv/${seriesId}-${season.season_number}-${currentEpisode}`,
         `https://www.nontongo.win/embed/tv/${seriesId}/${season.season_number}/${currentEpisode}`,
         `https://player.videasy.net/tv/${seriesId}/${season.season_number}/${currentEpisode}`
       ];
