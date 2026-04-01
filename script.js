@@ -237,15 +237,38 @@ async function syncToSheets(item, listType = 'watched') {
     const ids = getRes.result.values ? getRes.result.values.map(r => String(r[0])) : [];
     if (ids.includes(String(item.id))) return;
 
-    // 2. Append if not found
+    // 2. Insert row at the top (under header row 1)
     const category = item.type === 'movie' ? 'Movie' : 'Series';
-    await gapi.client.sheets.spreadsheets.values.append({
+    const values = [[item.id, category, item.title, item.poster_path, new Date().toISOString()]];
+    
+    // Insert empty row at index 1 (Sheet's 2nd row)
+    await gapi.client.sheets.spreadsheets.batchUpdate({
+      spreadsheetId: config.id,
+      resource: {
+        requests: [
+          {
+            insertDimension: {
+              range: {
+                sheetId: config.gid,
+                dimension: "ROWS",
+                startIndex: 1,
+                endIndex: 2
+              },
+              inheritFromBefore: false
+            }
+          }
+        ]
+      }
+    });
+
+    // Update the newly inserted empty row
+    await gapi.client.sheets.spreadsheets.values.update({
       spreadsheetId: config.id,
       range: `${config.title}!A2`,
       valueInputOption: 'RAW',
-      resource: { values: [[item.id, category, item.title, item.poster_path, new Date().toISOString()]] }
+      resource: { values }
     });
-  } catch (e) { console.error(`Sheet append failed (${listType})`, e); }
+  } catch (e) { console.error(`Sheet sync failed (${listType})`, e); }
 }
 
 async function removeFromSheets(id, listType = 'watched') {
