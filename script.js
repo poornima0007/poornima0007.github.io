@@ -1218,7 +1218,7 @@ async function renderMovieDetail() {
       `https://vidlink.pro/movie/${movieId}`,
       `https://vidsrc.net/embed/movie/${movieId}`,
       `https://vidsrc.online/embed/movie/${movieId}`,
-      `https://multiembed.mov/?video_id=${movieId}&tmdb=1`,
+      `se_player.php?video_id=${movieId}&tmdb=1`,
       `https://www.NontonGo.win/embed/movie/${movieId}`,
       `https://player.videasy.net/movie/${movieId}`
     ];
@@ -1366,7 +1366,7 @@ async function renderSeriesDetail() {
 
       const seriesStreamUrls = [
         `https://vidsrc.xyz/embed/tv/${seriesId}/${season.season_number}/${currentEpisode}`,
-        `https://multiembed.mov/?video_id=${seriesId}&tmdb=1&s=${season.season_number}&e=${currentEpisode}`,
+        `se_player.php?video_id=${seriesId}&tmdb=1&s=${season.season_number}&e=${currentEpisode}`,
         `https://www.nontongo.win/embed/tv/${seriesId}/${season.season_number}/${currentEpisode}`,
         `https://player.videasy.net/tv/${seriesId}/${season.season_number}/${currentEpisode}`
       ];
