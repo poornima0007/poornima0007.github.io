@@ -969,6 +969,15 @@ async function renderMoviesList(params = {}, page = 1) {
     const romanceKeywords = ['erotic', 'sexy', 'seductive', 'tempting', 'forbidden', 'taboo', 'mature', 'adult', 'nude', 'nudity', 'sexual', 'intimate', 'passionate', 'steamy', 'stepmom', 'stepmother', 'provocative', 'suggestive'];
 
     let p1, p2;
+
+    // Resolve keyword-based special genre filters
+    const KEYWORD_MAP = {
+      'kw:gore':     '12377,17453', // gore + splatter film
+      'kw:disaster': '1956',        // disaster film
+    };
+    const isKeyword = params.genre && params.genre.startsWith('kw:');
+    const keywordValue = isKeyword ? KEYWORD_MAP[params.genre] : null;
+
     if (params.query) {
       p1 = fetchTMDB('/search/movie', { query: params.query, page: tmdbPage1 });
       p2 = fetchTMDB('/search/movie', { query: params.query, page: tmdbPage2 });
@@ -977,15 +986,11 @@ async function renderMoviesList(params = {}, page = 1) {
         sort_by: params.sort || 'popularity.desc' 
       };
       if (params.year) discoverParams.primary_release_year = params.year;
-      
-      if (params.genre) {
-        if (params.genre.startsWith('kw_')) {
-          discoverParams.with_keywords = params.genre.replace('kw_', '');
-        } else {
-          discoverParams.with_genres = params.genre;
-        }
+      if (isKeyword) {
+        discoverParams.with_keywords = keywordValue;
+      } else if (params.genre) {
+        discoverParams.with_genres = params.genre;
       }
-      
       p1 = fetchTMDB('/discover/movie', { ...discoverParams, page: tmdbPage1 });
       p2 = fetchTMDB('/discover/movie', { ...discoverParams, page: tmdbPage2 });
     }
@@ -1031,23 +1036,25 @@ async function populateGenreDropdown() {
   const select = document.getElementById('genre-select');
   if (!select) return;
   select.innerHTML = '<option value="">All Genres</option>';
+
+  // Custom keyword-based special filters (not official TMDb genres)
+  const specialFilters = [
+    { value: 'kw:gore',     label: '🩸 Gore' },
+    { value: 'kw:disaster', label: '🌪️ Disaster' },
+  ];
+  specialFilters.forEach(({ value, label }) => {
+    const opt = document.createElement('option');
+    opt.value = value;
+    opt.textContent = label;
+    select.appendChild(opt);
+  });
+
   try {
     const genres = await fetchGenres();
     genres.forEach(g => {
       const opt = document.createElement('option');
       opt.value = g.id;
       opt.textContent = g.name;
-      select.appendChild(opt);
-    });
-    // Add Custom Keyword Genres
-    const custom = [
-      { id: 'kw_9748', name: 'Gore' },
-      { id: 'kw_15011', name: 'Disaster' }
-    ];
-    custom.forEach(c => {
-      const opt = document.createElement('option');
-      opt.value = c.id;
-      opt.textContent = c.name;
       select.appendChild(opt);
     });
   } catch { /* silent */ }
@@ -1097,6 +1104,14 @@ async function renderSeriesList(params = {}, page = 1) {
     const seen = new Set();
     let p1, p2;
 
+    // Resolve keyword-based special genre filters
+    const KEYWORD_MAP = {
+      'kw:gore':     '12377,17453',
+      'kw:disaster': '1956',
+    };
+    const isKeyword = params.genre && params.genre.startsWith('kw:');
+    const keywordValue = isKeyword ? KEYWORD_MAP[params.genre] : null;
+
     if (params.query) {
       p1 = fetchTMDB('/search/tv', { query: params.query, page: tmdbPage1 });
       p2 = fetchTMDB('/search/tv', { query: params.query, page: tmdbPage2 });
@@ -1105,15 +1120,11 @@ async function renderSeriesList(params = {}, page = 1) {
         sort_by: params.sort || 'popularity.desc' 
       };
       if (params.year) discoverParams.first_air_date_year = params.year;
-      
-      if (params.genre) {
-        if (params.genre.startsWith('kw_')) {
-          discoverParams.with_keywords = params.genre.replace('kw_', '');
-        } else {
-          discoverParams.with_genres = params.genre;
-        }
+      if (isKeyword) {
+        discoverParams.with_keywords = keywordValue;
+      } else if (params.genre) {
+        discoverParams.with_genres = params.genre;
       }
-      
       p1 = fetchTMDB('/discover/tv', { ...discoverParams, page: tmdbPage1 });
       p2 = fetchTMDB('/discover/tv', { ...discoverParams, page: tmdbPage2 });
     }
@@ -1151,23 +1162,25 @@ async function populateSeriesGenreDropdown() {
   const select = document.getElementById('series-genre-select');
   if (!select) return;
   select.innerHTML = '<option value="">All Genres</option>';
+
+  // Custom keyword-based special filters
+  const specialFilters = [
+    { value: 'kw:gore',     label: '🩸 Gore' },
+    { value: 'kw:disaster', label: '🌪️ Disaster' },
+  ];
+  specialFilters.forEach(({ value, label }) => {
+    const opt = document.createElement('option');
+    opt.value = value;
+    opt.textContent = label;
+    select.appendChild(opt);
+  });
+
   try {
     const genres = await fetchSeriesGenres();
     genres.forEach(g => {
       const opt = document.createElement('option');
       opt.value = g.id;
       opt.textContent = g.name;
-      select.appendChild(opt);
-    });
-    // Add Custom Keyword Genres
-    const custom = [
-      { id: 'kw_9748', name: 'Gore' },
-      { id: 'kw_15011', name: 'Disaster' }
-    ];
-    custom.forEach(c => {
-      const opt = document.createElement('option');
-      opt.value = c.id;
-      opt.textContent = c.name;
       select.appendChild(opt);
     });
   } catch { /* silent */ }
