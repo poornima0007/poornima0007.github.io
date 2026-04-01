@@ -2,6 +2,60 @@
 // Poflix — Enhanced Script (with Google Sheets DB)
 // ============================================
 
+// --- Theme Management Engine ---
+const themeManager = {
+  themes: ['rose', 'emerald', 'ocean', 'sunset', 'amethyst', 'cyberpunk', 'arctic', 'obsidian'],
+  init() {
+    const saved = localStorage.getItem('poflix-theme') || 'rose';
+    this.apply(saved);
+    this.setupGlobalListeners();
+  },
+  apply(name) {
+    document.documentElement.setAttribute('data-theme', name);
+    localStorage.setItem('poflix-theme', name);
+    // Update swatches if UI exists
+    document.querySelectorAll('.theme-swatch').forEach(s => {
+      s.classList.toggle('active', s.dataset.themeName === name);
+      // Update the accent color for the pulsing ring
+      if (s.classList.contains('active')) {
+        const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+        s.style.setProperty('--theme-accent', accent);
+      }
+    });
+  },
+  setupGlobalListeners() {
+    document.addEventListener('click', (e) => {
+      const dropdown = document.querySelector('.theme-dropdown.active');
+      const btn = document.querySelector('.theme-picker-btn');
+      if (dropdown) {
+        if (!dropdown.contains(e.target) && (!btn || !btn.contains(e.target))) {
+          dropdown.classList.remove('active');
+        }
+      }
+    });
+  },
+  renderSwatches(container) {
+    console.log("Rendering swatches into:", container); // Debug log
+    const swatchHTML = this.themes.map(t => 
+      `<div class="theme-swatch" data-theme-name="${t}" title="${t.charAt(0).toUpperCase() + t.slice(1)}"></div>`
+    ).join('');
+    container.innerHTML = swatchHTML;
+    
+    container.querySelectorAll('.theme-swatch').forEach(s => {
+      s.onclick = (e) => {
+        e.stopPropagation();
+        this.apply(s.dataset.themeName);
+      };
+      // Optional: Live Preview on Hover
+      s.onmouseenter = () => document.documentElement.setAttribute('data-theme', s.dataset.themeName);
+      s.onmouseleave = () => document.documentElement.setAttribute('data-theme', localStorage.getItem('poflix-theme') || 'rose');
+    });
+    
+    this.apply(localStorage.getItem('poflix-theme') || 'rose');
+  }
+};
+themeManager.init();
+
 // --- Google API Initialization ---
 let tokenClient;
 let gapiInited = false;
@@ -135,9 +189,7 @@ function updateNavbarAuth() {
   }
 
   if (googleUser) {
-    // Extract first name for a cleaner UI
     const firstName = googleUser.given_name || (googleUser.name ? googleUser.name.split(' ')[0] : 'Profile');
-    
     authLink.innerHTML = `
       <div class="nav-auth-group">
         <a href="profile.html" class="nav-user" title="Go to Profile">
@@ -1792,9 +1844,43 @@ document.addEventListener('DOMContentLoaded', () => {
     // Ensure "Dice" icon exists in the navbar dynamically
     if (!nav.querySelector('.surprise-link')) {
       const li = document.createElement('li');
-      li.innerHTML = '<a href="#" onclick="event.preventDefault(); rollDice();" class="surprise-link" title="Roll Dice">🎲</a>';
+      li.innerHTML = '<a href="#" onclick="event.preventDefault(); rollDice();" class="surprise-link" title="Roll Dice">🎲 Dice</a>';
       nav.appendChild(li);
     }
+
+    // 1. Universal Theme Picker (Floating Action Button - Bottom Right)
+    if (!document.getElementById('theme-fab-container')) {
+      const container = document.createElement('div');
+      container.id = 'theme-fab-container';
+      container.className = 'theme-picker-container fab';
+      container.innerHTML = `
+        <button class="theme-picker-btn" id="theme-global-btn" title="Change Theme" tabindex="0">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a10 10 0 0 1 0 20z" fill="currentColor"></path></svg>
+        </button>
+        <div class="theme-dropdown" id="theme-dropdown-global"></div>
+      `;
+      document.body.appendChild(container);
+
+      const btn = container.querySelector('#theme-global-btn');
+      const dropdown = container.querySelector('#theme-dropdown-global');
+      if (btn && dropdown) {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropdown.classList.toggle('active');
+          if (dropdown.classList.contains('active')) {
+            themeManager.renderSwatches(dropdown);
+          }
+        };
+      }
+    }
+
+
+
+
+    // Hide redundant mobile link if it exists
+    const mobLink = nav.querySelector('.mobile-theme-link');
+    if (mobLink) mobLink.style.display = 'none';
   }
 
   // Active nav link
