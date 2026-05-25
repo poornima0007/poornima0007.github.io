@@ -1268,6 +1268,7 @@ async function renderMovieDetail() {
     // Streaming sources
     const imdbId = movie.imdb_id || movieId;
     const streamUrls = [
+      `https://vidlink.pro/movie/${movieId}`,
       `https://soap2night.site/embed/movie/${imdbId}`,
       `https://vidsrc.wtf/api/1/movie/?id=${movieId}`,
       `https://player.videasy.net/movie/${movieId}`,
@@ -1416,6 +1417,7 @@ async function renderSeriesDetail() {
       ).join('');
 
       const seriesStreamUrls = [
+        `https://vidsrc.xyz/embed/tv/${seriesId}/${season.season_number}/${currentEpisode}`,
         `https://soap2night.site/embed/tv/${seriesId}/${season.season_number}/${currentEpisode}`,
         `https://www.vidsrc.wtf/api/1/tv/?id=${seriesId}&s=${season.season_number}&e=${currentEpisode}`,
         `https://player.videasy.net/tv/${seriesId}/${season.season_number}/${currentEpisode}`,
