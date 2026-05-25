@@ -1417,7 +1417,6 @@ async function renderSeriesDetail() {
       ).join('');
 
       const seriesStreamUrls = [
-        `https://vidsrc.xyz/embed/tv/${seriesId}/${season.season_number}/${currentEpisode}`,
         `https://soap2night.site/embed/tv/${seriesId}/${season.season_number}/${currentEpisode}`,
         `https://www.vidsrc.wtf/api/1/tv/?id=${seriesId}&s=${season.season_number}&e=${currentEpisode}`,
         `https://player.videasy.net/tv/${seriesId}/${season.season_number}/${currentEpisode}`,
