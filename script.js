@@ -1266,13 +1266,12 @@ async function renderMovieDetail() {
     `;
 
     // Streaming sources
+    const imdbId = movie.imdb_id || movieId;
     const streamUrls = [
-      `https://vidlink.pro/movie/${movieId}`,
-      `https://vidsrc.net/embed/movie/${movieId}`,
-      `https://vidsrc.online/embed/movie/${movieId}`,
-      `https://moviesapi.club/movie/${movieId}`,
-      `https://www.NontonGo.win/embed/movie/${movieId}`,
-      `https://player.videasy.net/movie/${movieId}`
+      `https://soap2night.site/embed/movie/${imdbId}`,
+      `https://vidsrc.wtf/api/1/movie/?id=${movieId}`,
+      `https://player.videasy.net/movie/${movieId}`,
+      `https://111movies.com/movie/${imdbId}`
     ];
     playerSection.innerHTML = `
       <h4>▶ Watch Now</h4>
@@ -1417,10 +1416,10 @@ async function renderSeriesDetail() {
       ).join('');
 
       const seriesStreamUrls = [
-        `https://vidsrc.xyz/embed/tv/${seriesId}/${season.season_number}/${currentEpisode}`,
-        `https://moviesapi.club/tv/${seriesId}-${season.season_number}-${currentEpisode}`,
-        `https://www.nontongo.win/embed/tv/${seriesId}/${season.season_number}/${currentEpisode}`,
-        `https://player.videasy.net/tv/${seriesId}/${season.season_number}/${currentEpisode}`
+        `https://soap2night.site/embed/tv/${seriesId}/${season.season_number}/${currentEpisode}`,
+        `https://www.vidsrc.wtf/api/1/tv/?id=${seriesId}&s=${season.season_number}&e=${currentEpisode}`,
+        `https://player.videasy.net/tv/${seriesId}/${season.season_number}/${currentEpisode}`,
+        `https://111movies.com/tv/${seriesId}/${season.season_number}/${currentEpisode}?autoPlay=true`
       ];
 
       const streamTabs = seriesStreamUrls.map((url, i) =>
