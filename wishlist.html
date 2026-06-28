@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Your Poflix wishlist — all the movies and series you want to watch.">
-  <title>Wishlist — Poflix</title>
+  <meta name="description" content="Your Poflix Wishlist — Movies and series you want to watch later.">
+  <title>Poflix — Wishlist</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <nav class="navbar" id="navbar">
+<body class="profile-page">
+  <nav class="navbar">
     <div class="container">
       <a class="navbar-brand" href="index.html">Poflix</a>
-      <form class="search-form" action="search.html" method="get" aria-label="Search site" style="position:relative;">
-        <input type="text" name="q" id="nav-search-input" placeholder="Search movies, series, actors..." aria-label="Search input" autocomplete="off">
+      <form class="search-form" action="search.html" method="get" aria-label="Search site">
+        <input type="text" name="q" placeholder="Search movies, series, actors..." aria-label="Search input">
         <button type="submit" aria-label="Search">Search</button>
       </form>
       <button class="navbar-toggle" id="navbar-toggle" aria-label="Toggle menu">
@@ -33,18 +33,35 @@
   </nav>
 
   <main id="main-content">
-    <div class="wishlist-page">
-      <div class="wishlist-header">
-        <h1>🔖 My Wishlist</h1>
-        <div class="wishlist-tabs">
-          <button class="wishlist-tab active" id="wishlist-tab-all" onclick="switchWishlistTab('all')">All</button>
-          <button class="wishlist-tab" id="wishlist-tab-movies" onclick="switchWishlistTab('movies')">Movies</button>
-          <button class="wishlist-tab" id="wishlist-tab-series" onclick="switchWishlistTab('series')">Series</button>
+    <div class="page-header">
+      <h1 class="accent">My Wishlist</h1>
+      <p>Save movies and series you want to watch later.</p>
+    </div>
+
+    <!-- Toggle Selector (Stats Style) -->
+    <div class="profile-toggle-container">
+      <div class="toggle-grid">
+        <div class="toggle-card active" data-type="movies">
+          <div class="toggle-icon">🎞️</div>
+          <div class="toggle-label">Movie Wishlist</div>
+        </div>
+        <div class="toggle-card" data-type="series">
+          <div class="toggle-icon">📺</div>
+          <div class="toggle-label">Series Wishlist</div>
         </div>
       </div>
-
-      <div id="wishlist-movies-grid" class="wishlist-grid" aria-live="polite"></div>
     </div>
+
+    <!-- Unified Wishlist Content Section -->
+    <section class="profile-section">
+      <div class="profile-grid active" id="wishlist-movies-grid">
+        <div class="profile-empty">Your movie wishlist is empty. Start adding!</div>
+      </div>
+      <div class="profile-grid" id="wishlist-series-grid" style="display: none;">
+        <div class="profile-empty">Your series wishlist is empty. Start adding!</div>
+      </div>
+    </section>
+
   </main>
 
   <footer>
@@ -57,12 +74,12 @@
         <a href="donate.html">Donate</a>
       </div>
     </div>
-    <div class="footer-copy">Poflix &copy; 2025. Powered by TMDb API.</div>
+    <div class="footer-divider"></div>
+    <div class="footer-copy">Poflix &copy; 2025. Not affiliated with Netflix or TMDb. Powered by TMDb API.</div>
   </footer>
 
-  <button class="back-to-top" id="back-to-top" aria-label="Back to top">↑</button>
-  <div class="toast-container" id="toast-container"></div>
-
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js" async defer></script>
   <script src="config.js"></script>
   <script src="script.js"></script>
 </body>
