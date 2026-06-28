@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Watch movies on Poflix — stream with multiple sources, view cast, trailers, and recommendations.">
-  <title>Poflix — Movie Detail</title>
+  <meta name="description" content="Watch movies on Poflix — rich movie details, cast, trailer and instant streaming.">
+  <title>Movie — Poflix</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <nav class="navbar">
+  <nav class="navbar" id="navbar">
     <div class="container">
       <a class="navbar-brand" href="index.html">Poflix</a>
-      <form class="search-form" action="search.html" method="get" aria-label="Search site">
-        <input type="text" name="q" placeholder="Search movies, series, actors..." aria-label="Search input">
+      <form class="search-form" action="search.html" method="get" aria-label="Search site" style="position:relative;">
+        <input type="text" name="q" id="nav-search-input" placeholder="Search movies, series, actors..." aria-label="Search input" autocomplete="off">
         <button type="submit" aria-label="Search">Search</button>
       </form>
       <button class="navbar-toggle" id="navbar-toggle" aria-label="Toggle menu">
@@ -33,16 +33,27 @@
   </nav>
 
   <main id="main-content">
-    <section class="movie-hero">
-      <div class="movie-hero-bg" id="movie-hero-bg"></div>
-      <div class="movie-hero-content">
-        <div class="movie-poster-card" id="movie-poster-card"></div>
-        <div class="movie-info-card" id="movie-info-card"></div>
+    <!-- Hero backdrop -->
+    <div class="detail-hero">
+      <div id="movie-hero-bg"></div>
+      <div class="detail-hero-overlay"></div>
+    </div>
+
+    <!-- Detail Layout -->
+    <div class="detail-layout">
+      <div class="detail-poster" id="movie-poster-card"></div>
+      <div class="detail-info" id="movie-info-card">
+        <div class="spinner" style="margin:4rem auto;"></div>
       </div>
-    </section>
-    <section class="movie-player-section" id="movie-player-section"></section>
-    <section class="movie-cast-section" id="movie-cast-section"></section>
-    <section class="recommendations-section" id="movie-recommendations"></section>
+    </div>
+
+    <!-- Player + Cast + Recs -->
+    <div style="max-width:1400px;margin:0 auto;padding:0 1.5rem 4rem;">
+      <div id="movie-player-section"></div>
+      <div id="movie-trailer-section"></div>
+      <div id="movie-cast-section"></div>
+      <div id="movie-recommendations"></div>
+    </div>
   </main>
 
   <footer>
@@ -55,11 +66,14 @@
         <a href="donate.html">Donate</a>
       </div>
     </div>
-    <div class="footer-divider"></div>
-    <div class="footer-copy">Poflix &copy; 2025. Not affiliated with Netflix or TMDb. Powered by TMDb API.</div>
+    <div class="footer-copy">Poflix &copy; 2025. Powered by TMDb API.</div>
   </footer>
 
   <button class="back-to-top" id="back-to-top" aria-label="Back to top">↑</button>
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Hidden iframe for Flickv4-style video extraction -->
+  <div id="flickv4-extractor" style="position:absolute;top:-9999px;left:-9999px;width:1px;height:1px;overflow:hidden;"></div>
 
   <script src="config.js"></script>
   <script src="script.js"></script>

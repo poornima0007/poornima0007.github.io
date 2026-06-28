@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Your Poflix profile — view favorites, watchlist, and personalized content.">
-  <title>Poflix — Profile</title>
+  <meta name="description" content="Your Poflix profile — watch stats, history, theme settings and account management.">
+  <title>Profile — Poflix</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="profile-page">
-  <nav class="navbar">
+<body>
+  <nav class="navbar" id="navbar">
     <div class="container">
       <a class="navbar-brand" href="index.html">Poflix</a>
-      <form class="search-form" action="search.html" method="get" aria-label="Search site">
-        <input type="text" name="q" placeholder="Search movies, series, actors..." aria-label="Search input">
+      <form class="search-form" action="search.html" method="get" aria-label="Search site" style="position:relative;">
+        <input type="text" name="q" id="nav-search-input" placeholder="Search movies, series, actors..." aria-label="Search input" autocomplete="off">
         <button type="submit" aria-label="Search">Search</button>
       </form>
       <button class="navbar-toggle" id="navbar-toggle" aria-label="Toggle menu">
@@ -33,41 +33,31 @@
   </nav>
 
   <main id="main-content">
-    <div class="page-header">
-      <h1 class="accent">My Profile</h1>
-      <p>Manage your account and viewed history.</p>
-    </div>
+    <div class="profile-page">
+      <!-- Profile header -->
+      <div class="profile-header-card glass-card" id="profile-header"></div>
 
-    <!-- Auth Status -->
-    <div id="auth-status" style="text-align:center; margin-bottom: 1rem; color: var(--text-secondary);"></div>
+      <!-- Stats -->
+      <div class="stats-grid" id="stats-grid"></div>
 
-    <!-- Stats Dashboard -->
-    <div id="stats-dashboard" class="stats-container"></div>
+      <!-- Theme Picker -->
+      <div class="theme-picker-section">
+        <div class="theme-picker-title">🎨 Choose Your Theme</div>
+        <div class="theme-swatches" id="theme-swatches"></div>
+      </div>
 
-    <!-- Toggle Selector (Stats Style) -->
-    <div class="profile-toggle-container">
-      <div class="toggle-grid">
-        <div class="toggle-card active" data-type="movies">
-          <div class="toggle-icon">🎞️</div>
-          <div class="toggle-label">Watched Movies</div>
-        </div>
-        <div class="toggle-card" data-type="series">
-          <div class="toggle-icon">📺</div>
-          <div class="toggle-label">Watched Series</div>
-        </div>
+      <!-- Genre Chart -->
+      <div id="genre-chart-section" style="display:none;">
+        <h3 style="font-family:'Outfit',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:1rem;">📊 Top Genres</h3>
+        <div class="genre-chart" id="genre-chart"></div>
+      </div>
+
+      <!-- Watch History -->
+      <div class="history-section" id="history-section">
+        <h3>🎬 Watch History</h3>
+        <div class="history-grid" id="watched-movies-grid" aria-live="polite"></div>
       </div>
     </div>
-
-    <!-- Unified Watched Content Section -->
-    <section class="profile-section">
-      <div class="profile-grid active" id="profile-movies-grid">
-        <div class="profile-empty">Loading your history from Google Sheets...</div>
-      </div>
-      <div class="profile-grid" id="profile-series-grid" style="display: none;">
-        <div class="profile-empty">Loading your history from Google Sheets...</div>
-      </div>
-    </section>
-
   </main>
 
   <footer>
@@ -76,15 +66,15 @@
       <div class="footer-links">
         <a href="movies.html">Movies</a>
         <a href="series.html">Series</a>
-        <a href="profile.html">Profile</a>
+        <a href="wishlist.html">Wishlist</a>
         <a href="donate.html">Donate</a>
       </div>
     </div>
-    <div class="footer-divider"></div>
-    <div class="footer-copy">Poflix &copy; 2025. Not affiliated with Netflix or TMDb. Powered by TMDb API.</div>
+    <div class="footer-copy">Poflix &copy; 2025. Powered by TMDb API.</div>
   </footer>
 
   <button class="back-to-top" id="back-to-top" aria-label="Back to top">↑</button>
+  <div class="toast-container" id="toast-container"></div>
 
   <script src="config.js"></script>
   <script src="script.js"></script>

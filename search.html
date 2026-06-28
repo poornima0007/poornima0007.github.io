@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Search movies, series, and actors on Poflix.">
-  <title>Poflix — Search Results</title>
+  <meta name="description" content="Search for movies, TV series, and actors on Poflix.">
+  <title>Search — Poflix</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <nav class="navbar">
+  <nav class="navbar" id="navbar">
     <div class="container">
       <a class="navbar-brand" href="index.html">Poflix</a>
-      <form class="search-form" action="search.html" method="get" aria-label="Search site">
-        <input type="text" name="q" placeholder="Search movies, series, actors..." aria-label="Search input">
+      <form class="search-form" action="search.html" method="get" aria-label="Search site" style="position:relative;">
+        <input type="text" name="q" id="nav-search-input" placeholder="Search movies, series, actors..." aria-label="Search input" autocomplete="off">
         <button type="submit" aria-label="Search">Search</button>
       </form>
       <button class="navbar-toggle" id="navbar-toggle" aria-label="Toggle menu">
@@ -25,6 +25,7 @@
         <li><a href="index.html">Home</a></li>
         <li><a href="movies.html">Movies</a></li>
         <li><a href="series.html">Series</a></li>
+        <li><a href="wishlist.html">Wishlist</a></li>
         <li><a href="profile.html">Profile</a></li>
         <li><a href="donate.html">Donate</a></li>
       </ul>
@@ -32,13 +33,26 @@
   </nav>
 
   <main id="main-content">
-    <h2 id="search-title">Search Results</h2>
-    <h4>🎬 Movies</h4>
-    <div class="animated-grid" id="search-movies"></div>
-    <h4>📺 Series</h4>
-    <div class="animated-grid" id="search-series"></div>
-    <h4>🎭 Actors</h4>
-    <div style="padding: 0 clamp(1rem, 3vw, 2rem);" id="search-actor"></div>
+    <div class="search-page">
+      <form class="search-page-form" action="search.html" method="get" style="position:relative;">
+        <input type="text" name="q" id="search-page-input" class="search-page-input" placeholder="Search for movies, series, actors..." aria-label="Search" autocomplete="off">
+        <button type="submit" class="search-page-btn" aria-label="Search">Search</button>
+      </form>
+
+      <div id="search-title" class="search-title">Enter a search query to get started</div>
+
+      <div id="search-actor" class="search-subsection"></div>
+
+      <div class="search-subsection" id="search-movies-section" style="display:none;">
+        <h3>🎬 Movies</h3>
+        <div class="search-grid" id="search-movies"></div>
+      </div>
+
+      <div class="search-subsection" id="search-series-section" style="display:none;">
+        <h3>📺 Series</h3>
+        <div class="search-grid" id="search-series"></div>
+      </div>
+    </div>
   </main>
 
   <footer>
@@ -51,11 +65,11 @@
         <a href="donate.html">Donate</a>
       </div>
     </div>
-    <div class="footer-divider"></div>
-    <div class="footer-copy">Poflix &copy; 2025. Not affiliated with Netflix or TMDb. Powered by TMDb API.</div>
+    <div class="footer-copy">Poflix &copy; 2025. Powered by TMDb API.</div>
   </footer>
 
   <button class="back-to-top" id="back-to-top" aria-label="Back to top">↑</button>
+  <div class="toast-container" id="toast-container"></div>
 
   <script src="config.js"></script>
   <script src="script.js"></script>

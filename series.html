@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Browse and discover TV series on Poflix. Filter by genre, year, or search by title.">
-  <title>Poflix — Series</title>
+  <meta name="description" content="Browse and discover thousands of TV series on Poflix. Filter by genre, year, rating and more.">
+  <title>Series — Poflix</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <nav class="navbar">
+  <nav class="navbar" id="navbar">
     <div class="container">
       <a class="navbar-brand" href="index.html">Poflix</a>
-      <form class="search-form" action="search.html" method="get" aria-label="Search series">
-        <input type="text" name="q" placeholder="Search movies, series, actors..." aria-label="Search input">
+      <form class="search-form" action="search.html" method="get" aria-label="Search site" style="position:relative;">
+        <input type="text" name="q" id="nav-search-input" placeholder="Search movies, series, actors..." aria-label="Search input" autocomplete="off">
         <button type="submit" aria-label="Search">Search</button>
       </form>
       <button class="navbar-toggle" id="navbar-toggle" aria-label="Toggle menu">
@@ -24,7 +24,7 @@
       <ul class="navbar-nav" id="navbar-nav">
         <li><a href="index.html">Home</a></li>
         <li><a href="movies.html">Movies</a></li>
-        <li><a href="series.html">Series</a></li>
+        <li><a href="series.html" class="active">Series</a></li>
         <li><a href="wishlist.html">Wishlist</a></li>
         <li><a href="profile.html">Profile</a></li>
         <li><a href="donate.html">Donate</a></li>
@@ -33,33 +33,28 @@
   </nav>
 
   <main id="main-content">
-    <h2>Series</h2>
-    <form id="series-filter-form" aria-label="Filter series">
-      <div>
-        <input type="text" name="query" id="series-query" placeholder="Search by title..." aria-label="Filter by title">
+    <div class="page-header container">
+      <h1>📺 Series</h1>
+      <p>Explore thousands of TV shows across every genre</p>
+    </div>
+
+    <form class="filter-bar" id="series-filter-form" aria-label="Filter series">
+      <div class="filter-search-wrap" style="position:relative;">
+        <input type="text" id="series-query" class="filter-input" placeholder="Search series..." aria-label="Series search" autocomplete="off">
       </div>
-      <div>
-        <select name="genre" id="series-genre-select" aria-label="Filter by genre">
-          <option value="">All Genres</option>
-        </select>
-      </div>
-      <div>
-        <input type="number" name="year" id="series-year" placeholder="Year" aria-label="Filter by year">
-      </div>
-      <div>
-        <select name="sort" id="series-sort" aria-label="Sort by">
-          <option value="popularity.desc">Popularity</option>
-          <option value="vote_average.desc">Rating</option>
-          <option value="first_air_date.desc">Newest</option>
-          <option value="first_air_date.asc">Oldest</option>
-        </select>
-      </div>
-      <div>
-        <button type="submit" class="btn" aria-label="Apply filters">🎬 Filter</button>
-      </div>
+      <select id="series-genre-select" class="filter-select" aria-label="Genre">
+        <option value="">All Genres</option>
+      </select>
+      <input type="number" id="series-year" class="filter-input" placeholder="Year" min="1900" max="2030" style="width:100px;" aria-label="Year">
+      <select id="series-sort" class="filter-select" aria-label="Sort by">
+        <option value="popularity.desc">Most Popular</option>
+        <option value="vote_average.desc">Top Rated</option>
+        <option value="first_air_date.desc">Newest</option>
+      </select>
+      <button type="submit" class="filter-btn">Apply Filters</button>
     </form>
 
-    <div class="animated-grid" id="series-grid"></div>
+    <div class="movies-grid" id="series-grid" role="list" aria-live="polite"></div>
     <div class="pagination" id="series-pagination"></div>
   </main>
 
@@ -73,11 +68,11 @@
         <a href="donate.html">Donate</a>
       </div>
     </div>
-    <div class="footer-divider"></div>
-    <div class="footer-copy">Poflix &copy; 2025. Not affiliated with Netflix or TMDb. Powered by TMDb API.</div>
+    <div class="footer-copy">Poflix &copy; 2025. Powered by TMDb API.</div>
   </footer>
 
   <button class="back-to-top" id="back-to-top" aria-label="Back to top">↑</button>
+  <div class="toast-container" id="toast-container"></div>
 
   <script src="config.js"></script>
   <script src="script.js"></script>
